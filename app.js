@@ -111,13 +111,13 @@ function createTrackCard(track) {
     `;
 }
 
-// Check if release is within the last 7 days
+// Check if release is within the last 30 days
 function isNewRelease(dateString) {
     const releaseDate = new Date(dateString);
     const today = new Date();
     const diffTime = today - releaseDate;
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    return diffDays <= 7 && diffDays >= 0;
+    return diffDays <= 30 && diffDays >= 0;
 }
 
 // Format date to readable string
@@ -149,9 +149,31 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Auto-refresh data every 5 minutes (300000 ms)
-setInterval(async () => {
-    await loadMusicData();
-    applyFilters();
-    updateLastUpdated();
-}, 300000);
+// Schedule auto-refresh for Fridays at 3 PM ET
+function scheduleWeeklyRefresh() {
+    const checkAndRefresh = async () => {
+        const now = new Date();
+        
+        // Convert to ET (UTC-5 or UTC-4 during DST)
+        const etOffset = -5 * 60; // Standard time offset in minutes
+        const localOffset = now.getTimezoneOffset();
+        const etTime = new Date(now.getTime() + (localOffset + etOffset) * 60000);
+        
+        // Check if it's Friday (5) and 3 PM (15:00)
+        const isFriday = etTime.getDay() === 5;
+        const hour = etTime.getHours();
+        const minute = etTime.getMinutes();
+        
+        // Refresh if it's Friday between 3:00 PM and 3:01 PM ET
+        if (isFriday && hour === 15 && minute === 0) {
+            await loadMusicData();
+            applyFilters();
+            updateLastUpdated();
+        }
+    };
+    
+    // Check every minute
+    setInterval(checkAndRefresh, 60000);
+}
+
+scheduleWeeklyRefresh();

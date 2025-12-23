@@ -288,9 +288,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check - verify status code is 200
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/api/health')"
+    CMD python -c "import requests; r = requests.get('http://localhost:8000/api/health'); exit(0 if r.status_code == 200 else 1)"
 
 # Run backend
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
@@ -316,7 +316,7 @@ services:
     volumes:
       - ./spatial_selecta.db:/app/spatial_selecta.db  # For SQLite
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/health')"]
+      test: ["CMD", "python", "-c", "import requests; r = requests.get('http://localhost:8000/api/health'); exit(0 if r.status_code == 200 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -9,7 +9,7 @@ A website that automatically tracks and displays the latest music releases avail
 - **Format Filtering**: Filter by audio format (Dolby Atmos, 360 Reality Audio)
 - **New Release Badges**: Highlights releases from the last 7 days
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Clean Interface**: Beautiful gradient design with card-based layout
+- **Minimalist Interface**: Clean, typography-focused design following Dieter Rams' principles
 
 ## Getting Started
 

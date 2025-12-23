@@ -48,7 +48,7 @@ function setupEventListeners() {
     });
 
     refreshButton.addEventListener('click', async () => {
-        refreshButton.textContent = '🔄 Refreshing...';
+        refreshButton.textContent = 'Refreshing...';
         refreshButton.disabled = true;
         
         await loadMusicData();
@@ -56,7 +56,7 @@ function setupEventListeners() {
         updateLastUpdated();
         
         setTimeout(() => {
-            refreshButton.textContent = '🔄 Refresh Data';
+            refreshButton.textContent = 'Refresh';
             refreshButton.disabled = false;
         }, 500);
     });
@@ -93,15 +93,12 @@ function renderTracks() {
 // Create a track card HTML
 function createTrackCard(track) {
     const isNew = isNewRelease(track.releaseDate);
-    const newBadge = isNew ? '<span class="new-badge">NEW</span>' : '';
+    const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
     
     return `
         <div class="music-card" data-track-id="${track.id}">
-            <div class="album-art">
-                <div style="font-size: 4rem;">${track.albumArt}</div>
-                <span class="format-badge">${track.format}</span>
-            </div>
             <div class="card-content">
+                <span class="format-badge">${escapeHtml(track.format)}</span>
                 <h3 class="track-title">${escapeHtml(track.title)}${newBadge}</h3>
                 <p class="track-artist">${escapeHtml(track.artist)}</p>
                 <p class="track-album">${escapeHtml(track.album)}</p>

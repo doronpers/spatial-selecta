@@ -1,0 +1,3 @@
+"""
+Spatial Selecta application package.
+"""

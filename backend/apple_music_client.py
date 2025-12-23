@@ -26,11 +26,13 @@ class AppleMusicClient:
     BASE_URL = "https://api.music.apple.com/v1"
     
     # Curated Apple Spatial Audio playlists to monitor
+    # Note: Some IDs below are placeholders. Replace with actual Apple Music playlist IDs.
+    # To find playlist IDs, use the Apple Music API or inspect URLs from Apple Music web player.
     SPATIAL_AUDIO_PLAYLISTS = [
-        "pl.567c7ad7094d4c6e9b687d5fd058e689",  # Made for Spatial Audio
-        "pl.4a3d8e6e5f3f4a6dbe5e3e6c5d5e5e5e",  # Hits in Spatial Audio
-        "pl.jazz-spatial-audio",  # Jazz in Spatial Audio
-        # Add more playlist IDs as discovered
+        "pl.567c7ad7094d4c6e9b687d5fd058e689",  # Example: Made for Spatial Audio (verify ID)
+        # Add more verified playlist IDs below:
+        # "pl.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  # Hits in Spatial Audio
+        # "pl.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  # Jazz in Spatial Audio
     ]
     
     def __init__(self):

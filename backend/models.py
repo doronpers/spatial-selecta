@@ -22,8 +22,8 @@ class Track(Base):
     album_art = Column(String(10), nullable=True)  # Emoji or URL
     apple_music_id = Column(String(200), nullable=True, unique=True)  # Apple Music track ID
     amazon_music_id = Column(String(200), nullable=True, unique=True)  # Amazon Music track ID
-    discovered_at = Column(DateTime, default=datetime.now)  # When we first detected this track
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    discovered_at = Column(DateTime, default=lambda: datetime.now())  # When we first detected this track
+    updated_at = Column(DateTime, default=lambda: datetime.now(), onupdate=lambda: datetime.now())
     extra_metadata = Column(Text, nullable=True)  # JSON field for additional metadata
 
     def __repr__(self):

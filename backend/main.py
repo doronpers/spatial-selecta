@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
 import logging
+import os
 
 from backend.database import get_db, init_db
 from backend.models import Track
@@ -27,9 +28,12 @@ app = FastAPI(
 )
 
 # Configure CORS to allow frontend access
+# In production, replace "*" with specific origins
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS != ["*"] else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -259,24 +259,11 @@ function setupEventListeners() {
         domCache.refreshButton.textContent = 'Refreshing...';
         domCache.refreshButton.disabled = true;
         
-        // Try to trigger backend refresh if API is available
-        try {
-            const refreshResponse = await fetch(`${API_URL}/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (refreshResponse.ok) {
-                const result = await refreshResponse.json();
-                console.log('Backend refresh completed:', result);
-            }
-        } catch (error) {
-            console.log('Backend API not available for refresh:', error.message);
-        }
+        // Note: Backend refresh endpoint requires authentication
+        // Frontend refresh button only reloads data, not triggering backend scan
+        // To trigger backend refresh, use the API directly with authentication token
         
-        // Always reload data from current source
+        // Reload data from current source
         try {
             await loadMusicData();
             applyFilters();

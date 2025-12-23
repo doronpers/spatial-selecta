@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spatial Selecta - Apple Music Spatial Audio Releases</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Spatial Selecta - Latest Spatial Audio Releases</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -45,6 +47,16 @@
             <p>© 2026 Spatial Selecta | Tracking Apple Music Spatial Audio releases</p>
         </div>
     </footer>
+
+    <!-- Track Detail Modal -->
+    <div id="trackModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+        <div class="modal-content">
+            <span class="modal-close" aria-label="Close modal" role="button" tabindex="0">&times;</span>
+            <div id="modalBody">
+                <!-- Modal content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

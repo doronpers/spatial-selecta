@@ -7,7 +7,9 @@ dist/
 build/
 .vscode/
 .idea/
-
+AuthKey_*.p8
+.env
+.env.local
 # Python
 __pycache__/
 *.py[cod]

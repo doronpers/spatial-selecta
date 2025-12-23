@@ -7,7 +7,11 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-20",
-    "albumArt": "🌃"
+    "albumArt": "🌃",
+    "musicLink": "https://music.apple.com/us/album/blinding-lights/1499378108?i=1499378110",
+    "review": "The Dolby Atmos mix of 'Blinding Lights' elevates the synth-pop anthem with exceptional spatial separation. The iconic synth arpeggios now swirl around the listener, creating an immersive soundscape that enhances the track's retro-futuristic vibe. The vocals are perfectly centered while instrumentation extends into the height channels, making this one of the standout spatial audio releases.",
+    "technicalDetails": "7.1.4 channel mix with discrete height channel information. Bass frequencies are well-distributed across the soundstage, and the reverb tails extend naturally into the overhead channels.",
+    "comparisonNotes": "Currently exclusive to Apple Music. The mix demonstrates excellent use of object-based audio, with individual elements positioned precisely in 3D space."
   },
   {
     "id": 2,
@@ -17,7 +21,11 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-18",
-    "albumArt": "💫"
+    "albumArt": "💫",
+    "musicLink": "https://music.apple.com/us/album/levitating/1499378108?i=1499378120",
+    "review": "Dua Lipa's disco-pop hit receives a masterful spatial treatment. The funky bassline gains incredible depth, and the layered vocals create a sense of height that makes the track feel larger than life. The spatial mix preserves the track's dancefloor energy while adding immersive qualities that reward careful listening.",
+    "technicalDetails": "Full 7.1.4 mix with emphasis on rhythmic elements in the lower channels. The synth pads and strings are positioned overhead, creating a sense of vertical space.",
+    "comparisonNotes": "Apple Music exclusive. The mix maintains the original's punchy dynamics while expanding the soundstage significantly."
   },
   {
     "id": 4,
@@ -27,7 +35,11 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-15",
-    "albumArt": "🌙"
+    "albumArt": "🌙",
+    "musicLink": "https://music.apple.com/us/album/anti-hero/1645701477?i=1645701480",
+    "review": "Taylor Swift's self-reflective anthem showcases excellent spatial audio production. The layered vocals are positioned with precision, and the synth elements create a three-dimensional soundscape. The mix enhances the track's introspective nature while maintaining its pop appeal.",
+    "technicalDetails": "7.1.4 mix with careful attention to vocal layering. The bass and kick drum are anchored in the lower channels while atmospheric elements extend upward.",
+    "comparisonNotes": "Apple Music exclusive. Part of the full Midnights album in Dolby Atmos, showcasing consistent spatial mixing across the entire release."
   },
   {
     "id": 7,
@@ -37,7 +49,11 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-21",
-    "albumArt": "⭐"
+    "albumArt": "⭐",
+    "musicLink": "https://music.apple.com/us/album/die-for-you/1440833238?i=1440833240",
+    "review": "The Weeknd's emotional ballad receives a sophisticated spatial mix. The atmospheric synths and reverb-drenched vocals create an immersive soundscape that enhances the track's emotional impact. The spatial treatment adds depth without overwhelming the song's intimate nature.",
+    "technicalDetails": "7.1.4 mix with emphasis on atmospheric elements. The reverb tails extend into the height channels, creating a sense of space that complements the track's mood.",
+    "comparisonNotes": "Apple Music exclusive. Part of the Starboy album's Dolby Atmos reissue, maintaining consistency with the original production aesthetic."
   },
   {
     "id": 8,
@@ -47,7 +63,11 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-14",
-    "albumArt": "🌙"
+    "albumArt": "🌙",
+    "musicLink": "https://music.apple.com/us/album/karma/1645701477?i=1645701485",
+    "review": "Taylor Swift's playful track benefits from an energetic spatial mix. The production elements are positioned with precision, creating a dynamic soundstage. The mix enhances the track's upbeat nature while maintaining clarity across all elements.",
+    "technicalDetails": "Full 7.1.4 Dolby Atmos mix. The rhythmic elements are well-anchored while melodic components extend into the height channels.",
+    "comparisonNotes": "Apple Music exclusive. Consistent with the Midnights album's spatial audio treatment, showcasing the album's cohesive production approach."
   },
   {
     "id": 10,
@@ -57,7 +77,11 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-23",
-    "albumArt": "🆘"
+    "albumArt": "🆘",
+    "musicLink": "https://music.apple.com/us/album/kill-bill/1659722248?i=1659722250",
+    "review": "SZA's revenge anthem receives a masterful spatial treatment. The track's cinematic quality is enhanced by the immersive mix, with elements positioned to create a sense of drama. The vocals are clear and present while the production elements extend into the height channels.",
+    "technicalDetails": "Full 7.1.4 mix with careful attention to vocal clarity. The atmospheric elements and reverb create a sense of space that complements the track's narrative.",
+    "comparisonNotes": "Apple Music exclusive. Part of the SOS album's Dolby Atmos release, showcasing the album's diverse production styles in spatial audio."
   },
   {
     "id": 12,
@@ -67,6 +91,10 @@
     "format": "Dolby Atmos",
     "platform": "Apple Music",
     "releaseDate": "2025-12-22",
-    "albumArt": "🔴"
+    "albumArt": "🔴",
+    "musicLink": "https://music.apple.com/us/album/paint-the-town-red/1701234567?i=1701234568",
+    "review": "Doja Cat's bold track receives an energetic spatial mix. The production elements are positioned with precision, creating a dynamic soundstage. The mix enhances the track's confident energy while maintaining clarity across all elements. The bass and percussion are well-anchored while melodic components extend into the height channels.",
+    "technicalDetails": "Full 7.1.4 Dolby Atmos mix. The rhythmic elements are well-distributed, and the vocal processing creates a sense of space that complements the track's attitude.",
+    "comparisonNotes": "Apple Music exclusive. Part of the Scarlet album's Dolby Atmos release, showcasing Doja Cat's production evolution in spatial audio."
   }
 ]

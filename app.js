@@ -1,3 +1,8 @@
+// Configuration
+const API_URL = window.location.hostname === 'localhost' && window.location.port === '8080'
+    ? 'http://localhost:8000/api'  // Local development with separate backend
+    : '/api';  // Production - assume API is on same domain
+
 // State management
 let allTracks = [];
 let filteredTracks = [];
@@ -14,20 +19,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateLastUpdated();
 });
 
-// Load music data from JSON file
+// Load music data from API or fallback to JSON file
 async function loadMusicData() {
     try {
-        const response = await fetch('data.json');
-        allTracks = await response.json();
+        // Try to load from backend API first
+        const response = await fetch(`${API_URL}/tracks?limit=100`);
         
-        // Sort by release date (newest first)
-        allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
-        
-        filteredTracks = [...allTracks];
+        if (response.ok) {
+            const apiTracks = await response.json();
+            
+            // Transform API response to match frontend format
+            allTracks = apiTracks.map(track => ({
+                id: track.id,
+                title: track.title,
+                artist: track.artist,
+                album: track.album,
+                format: track.format,
+                platform: track.platform,
+                releaseDate: track.release_date,
+                albumArt: track.album_art || '🎵'
+            }));
+            
+            // Sort by release date (newest first)
+            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+            
+            filteredTracks = [...allTracks];
+            console.log(`Loaded ${allTracks.length} tracks from API`);
+        } else {
+            throw new Error('API not available, falling back to data.json');
+        }
     } catch (error) {
-        console.error('Error loading music data:', error);
-        allTracks = [];
-        filteredTracks = [];
+        console.warn('Backend API not available, loading from data.json:', error.message);
+        
+        // Fallback to loading from static JSON file
+        try {
+            const response = await fetch('data.json');
+            allTracks = await response.json();
+            
+            // Sort by release date (newest first)
+            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+            
+            filteredTracks = [...allTracks];
+            console.log(`Loaded ${allTracks.length} tracks from data.json`);
+        } catch (fallbackError) {
+            console.error('Error loading music data:', fallbackError);
+            allTracks = [];
+            filteredTracks = [];
+        }
     }
 }
 
@@ -51,6 +89,24 @@ function setupEventListeners() {
         refreshButton.textContent = 'Refreshing...';
         refreshButton.disabled = true;
         
+        // Try to trigger backend refresh if API is available
+        try {
+            const refreshResponse = await fetch(`${API_URL}/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (refreshResponse.ok) {
+                const result = await refreshResponse.json();
+                console.log('Backend refresh completed:', result);
+            }
+        } catch (error) {
+            console.log('Backend API not available for refresh:', error.message);
+        }
+        
+        // Always reload data from current source
         await loadMusicData();
         applyFilters();
         updateLastUpdated();

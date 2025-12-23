@@ -20,16 +20,6 @@
     "albumArt": "💫"
   },
   {
-    "id": 3,
-    "title": "As It Was",
-    "artist": "Harry Styles",
-    "album": "Harry's House",
-    "format": "Dolby Atmos",
-    "platform": "Amazon Music",
-    "releaseDate": "2025-12-22",
-    "albumArt": "🏠"
-  },
-  {
     "id": 4,
     "title": "Anti-Hero",
     "artist": "Taylor Swift",
@@ -38,26 +28,6 @@
     "platform": "Apple Music",
     "releaseDate": "2025-12-15",
     "albumArt": "🌙"
-  },
-  {
-    "id": 5,
-    "title": "Flowers",
-    "artist": "Miley Cyrus",
-    "album": "Endless Summer Vacation",
-    "format": "Dolby Atmos",
-    "platform": "Amazon Music",
-    "releaseDate": "2025-12-19",
-    "albumArt": "🌺"
-  },
-  {
-    "id": 6,
-    "title": "Unholy",
-    "artist": "Sam Smith & Kim Petras",
-    "album": "Gloria",
-    "format": "360 Reality Audio",
-    "platform": "Amazon Music",
-    "releaseDate": "2025-12-16",
-    "albumArt": "👼"
   },
   {
     "id": 7,
@@ -80,16 +50,6 @@
     "albumArt": "🌙"
   },
   {
-    "id": 9,
-    "title": "Creepin'",
-    "artist": "Metro Boomin, The Weeknd & 21 Savage",
-    "album": "Heroes & Villains",
-    "format": "Dolby Atmos",
-    "platform": "Amazon Music",
-    "releaseDate": "2025-12-17",
-    "albumArt": "🦸"
-  },
-  {
     "id": 10,
     "title": "Kill Bill",
     "artist": "SZA",
@@ -98,16 +58,6 @@
     "platform": "Apple Music",
     "releaseDate": "2025-12-23",
     "albumArt": "🆘"
-  },
-  {
-    "id": 11,
-    "title": "Calm Down",
-    "artist": "Rema & Selena Gomez",
-    "album": "Rave & Roses",
-    "format": "360 Reality Audio",
-    "platform": "Amazon Music",
-    "releaseDate": "2025-11-13",
-    "albumArt": "🌹"
   },
   {
     "id": 12,

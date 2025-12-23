@@ -1,0 +1,22 @@
+{
+  "name": "spatial-selecta",
+  "version": "1.0.0",
+  "description": "A website that automatically updates when new music becomes available in spatial audio formats like Dolby Atmos",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 8080",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "spatial-audio",
+    "dolby-atmos",
+    "apple-music",
+    "amazon-music",
+    "immersive-audio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

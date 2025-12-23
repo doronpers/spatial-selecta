@@ -96,6 +96,10 @@ Spatial Selecta now includes a Python backend that automatically detects and tra
 
 ### Backend Setup
 
+**🚀 Deploy to Production (Recommended):**
+See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for easy deployment to Render.com (10 minutes, $7/month)
+
+**Local Development:**
 See [backend/README.md](backend/README.md) for detailed setup instructions.
 
 **Quick start:**

@@ -1,0 +1,58 @@
+# Files to ignore when deploying to Render
+# Similar to .gitignore but for Render deployments
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.log
+*.pyc
+__pycache__/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in production)
+*.md
+!README.md
+docs/
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Git
+.git/
+.gitignore
+
+# Node (if not using)
+node_modules/
+package-lock.json
+
+# Python virtual environment
+venv/
+env/
+ENV/
+
+# Private keys
+AuthKey_*.p8
+*.pem
+*.key
+
+# Backup files
+*.bak
+*.backup
+backup_*
+

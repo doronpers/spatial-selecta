@@ -2,6 +2,25 @@
 
 This guide covers deploying Spatial Selecta to production, including DNS configuration and hosting setup.
 
+## 🚀 Recommended: Deploy to Render (Easiest)
+
+**For most users, we recommend deploying to Render.com** - it's the simplest option with no server management needed.
+
+👉 **See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for step-by-step Render deployment guide**
+
+**Why Render?**
+- ✅ 10-minute setup (vs 2-4 hours for VPS)
+- ✅ No server management
+- ✅ Automatic SSL, deployments, scaling
+- ✅ Built-in background job support
+- ✅ $7-14/month (comparable to VPS)
+
+---
+
+## Alternative Options
+
+If you need more control or want to learn server management, see the options below.
+
 ## Architecture Overview
 
 Spatial Selecta consists of:

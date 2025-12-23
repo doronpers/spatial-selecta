@@ -9,3 +9,5 @@ pydantic==2.5.3
 pydantic-settings==2.1.0
 alembic==1.13.1
 httpx==0.26.0
+pyjwt==2.8.1
+cryptography==42.0.4

@@ -85,15 +85,60 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 - Apple Music
 - Amazon Music
 
+## Backend API
+
+Spatial Selecta now includes a Python backend that automatically detects and tracks spatial audio releases using the Apple Music API.
+
+### Features
+
+- **Apple Music API Integration**: Automatically detects Dolby Atmos tracks using the `audioVariants` API attribute
+- **Automated Discovery**: Background scheduler runs every 48 hours to find new spatial audio releases
+- **Playlist Monitoring**: Tracks curated Apple playlists like "Made for Spatial Audio"
+- **REST API**: Provides endpoints for querying spatial audio tracks with filtering
+- **Database Storage**: Persistent storage of track metadata and discovery timestamps
+
+### Backend Setup
+
+See [backend/README.md](backend/README.md) for detailed setup instructions.
+
+**Quick start:**
+
+1. Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Configure Apple Music API credentials:
+```bash
+cp .env.example .env
+# Edit .env and add your Apple Music Developer Token
+```
+
+3. Run the backend:
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+4. Access API documentation at `http://localhost:8000/docs`
+
+### API Endpoints
+
+- `GET /api/tracks` - List all spatial audio tracks (with platform/format filtering)
+- `GET /api/tracks/new` - Get recently released tracks
+- `POST /api/refresh` - Manually trigger data refresh
+- `GET /api/stats` - Get database statistics
+
 ## Future Enhancements
 
-- Integration with Apple Music and Amazon Music APIs for automatic data fetching
+- ✅ Integration with Apple Music API for automatic data fetching
+- Amazon Music API integration (when available)
 - User accounts and favorites
 - Playlist creation
 - Email notifications for new releases
 - Search functionality
 - Genre filtering
 - Artist page views
+- WebSocket support for real-time updates
 
 ## License
 

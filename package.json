@@ -5,6 +5,8 @@
   "main": "index.html",
   "scripts": {
     "start": "npx http-server . -p 8080",
+    "backend": "uvicorn backend.main:app --reload --port 8000",
+    "backend:prod": "uvicorn backend.main:app --host 0.0.0.0 --port 8000",
     "test": "echo \"No tests yet\" && exit 0"
   },
   "keywords": [

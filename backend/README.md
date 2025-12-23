@@ -112,20 +112,6 @@ Apple Music API has rate limits:
 - 600 requests per minute per developer token
 - Consider this when adding more playlists to monitor
 
-## Amazon Music Support
-
-### Current Status
-Amazon Music does not provide a public API for detecting Dolby Atmos content.
-
-### Workaround Options
-
-1. **Manual Data Entry**: Continue updating `data.json` with Amazon Music releases
-2. **Web Scraping** (Not recommended): Violates ToS and is fragile
-3. **Third-party Aggregators**: Some services track Atmos releases
-
-### Future Enhancement
-Monitor for Amazon Music API announcements and integrate when available.
-
 ## Database Schema
 
 ### Tracks Table

@@ -1,12 +1,11 @@
 # Spatial Selecta 🎵
 
-A website that automatically tracks and displays the latest music releases available in immersive spatial audio formats like Dolby Atmos on Apple Music and Amazon Music.
+A website that automatically tracks and displays the latest music releases available in Dolby Atmos spatial audio format on Apple Music.
 
 ## Features
 
 - **Weekly Updates**: Automatically refreshes music data every Friday at 3 PM ET
-- **Platform Filtering**: Filter releases by platform (Apple Music, Amazon Music)
-- **Format Filtering**: Filter by audio format (Dolby Atmos, 360 Reality Audio)
+- **Format Filtering**: Filter by audio format (Dolby Atmos)
 - **New Release Badges**: Highlights releases from the last 30 days
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 - **Minimalist Interface**: Clean, typography-focused design following Dieter Rams' principles
@@ -79,11 +78,9 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 
 ### Supported Formats
 - Dolby Atmos
-- 360 Reality Audio
 
 ### Supported Platforms
 - Apple Music
-- Amazon Music
 
 ## Backend API
 
@@ -131,7 +128,6 @@ uvicorn backend.main:app --reload --port 8000
 ## Future Enhancements
 
 - ✅ Integration with Apple Music API for automatic data fetching
-- Amazon Music API integration (when available)
 - User accounts and favorites
 - Playlist creation
 - Email notifications for new releases

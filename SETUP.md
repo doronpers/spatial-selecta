@@ -4,7 +4,7 @@ This guide walks you through setting up the complete Spatial Selecta system with
 
 ## Overview
 
-Spatial Selecta automatically tracks and displays spatial audio releases from Apple Music and Amazon Music. The system consists of:
+Spatial Selecta automatically tracks and displays Dolby Atmos spatial audio releases from Apple Music. The system consists of:
 
 1. **Frontend**: Static HTML/CSS/JS website for displaying tracks
 2. **Backend**: Python FastAPI server with Apple Music API integration
@@ -19,8 +19,7 @@ Spatial Selecta automatically tracks and displays spatial audio releases from Ap
 │                     HTML + CSS + JavaScript                      │
 │                                                                   │
 │  - Display spatial audio tracks in responsive grid              │
-│  - Filter by platform (Apple Music, Amazon Music)               │
-│  - Filter by format (Dolby Atmos, 360 Reality Audio)           │
+│  - Filter by format (Dolby Atmos)                               │
 │  - Auto-refresh from backend API or fallback to data.json       │
 └─────────────────────────────────────────────────────────────────┘
                                  │
@@ -61,10 +60,10 @@ Spatial Selecta automatically tracks and displays spatial audio releases from Ap
 │                                                                   │
 │  Tracks Table:                                                   │
 │  • id, title, artist, album                                      │
-│  • format (Dolby Atmos, 360 Reality Audio)                      │
-│  • platform (Apple Music, Amazon Music)                         │
+│  • format (Dolby Atmos)                                          │
+│  • platform (Apple Music)                                        │
 │  • release_date, discovered_at, updated_at                      │
-│  • apple_music_id, amazon_music_id                              │
+│  • apple_music_id                                                │
 │  • extra_metadata (JSON)                                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -198,16 +197,14 @@ curl http://localhost:8000/api/stats
 Expected response:
 ```json
 {
-  "total_tracks": 12,
+  "total_tracks": 7,
   "by_platform": {
-    "Apple Music": 7,
-    "Amazon Music": 5
+    "Apple Music": 7
   },
   "by_format": {
-    "Dolby Atmos": 10,
-    "360 Reality Audio": 2
+    "Dolby Atmos": 7
   },
-  "new_tracks_last_30_days": 11
+  "new_tracks_last_30_days": 7
 }
 ```
 
@@ -382,19 +379,6 @@ createdb spatial_selecta
 - Apple Music API limit: 600 requests/minute
 - Reduce playlist count in `apple_music_client.py`
 - Add rate limiting delays
-
-## Amazon Music Support
-
-Currently, Amazon Music does not provide a public API for spatial audio detection.
-
-**Current approach:**
-- Manual data entry in `data.json`
-- Backend imports this data on initialization
-
-**Future options:**
-- Monitor for Amazon Music API announcements
-- Use third-party aggregators when available
-- Community contributions for newly discovered tracks
 
 ## Maintenance
 

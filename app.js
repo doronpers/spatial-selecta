@@ -71,14 +71,8 @@ async function loadMusicData() {
 
 // Setup event listeners
 function setupEventListeners() {
-    const platformFilter = document.getElementById('platformFilter');
     const formatFilter = document.getElementById('formatFilter');
     const refreshButton = document.getElementById('refreshButton');
-
-    platformFilter.addEventListener('change', (e) => {
-        currentFilters.platform = e.target.value;
-        applyFilters();
-    });
 
     formatFilter.addEventListener('change', (e) => {
         currentFilters.format = e.target.value;
@@ -121,9 +115,8 @@ function setupEventListeners() {
 // Apply filters to tracks
 function applyFilters() {
     filteredTracks = allTracks.filter(track => {
-        const platformMatch = currentFilters.platform === 'all' || track.platform === currentFilters.platform;
         const formatMatch = currentFilters.format === 'all' || track.format === currentFilters.format;
-        return platformMatch && formatMatch;
+        return formatMatch;
     });
     
     renderTracks();

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation delivers a complete automated system for detecting and tracking spatial/immersive audio releases from Apple Music and Amazon Music, based on the research provided in the problem statement.
+This implementation delivers a complete automated system for detecting and tracking Dolby Atmos spatial audio releases from Apple Music, based on the research provided in the problem statement.
 
 ## What Was Built
 
@@ -65,10 +65,10 @@ Implements the recommended approach from the research:
 ```sql
 - id (primary key)
 - title, artist, album
-- format (Dolby Atmos, 360 Reality Audio)
-- platform (Apple Music, Amazon Music)
+- format (Dolby Atmos)
+- platform (Apple Music)
 - release_date
-- apple_music_id, amazon_music_id (for deduplication)
+- apple_music_id (for deduplication)
 - discovered_at, updated_at (tracking timestamps)
 - extra_metadata (JSON for additional data)
 ```
@@ -96,17 +96,7 @@ Updated the existing frontend to work seamlessly with the backend:
 - Platform and format filtering still work
 - "New" badges for recent releases
 
-### 6. **Amazon Music Support**
-
-**Current State**: No public API available (as documented in research)
-
-**Implementation**:
-- Database schema ready for Amazon Music data
-- Manual import from `data.json` supported
-- Documentation of limitations
-- Framework ready for future API integration
-
-### 7. **Production Deployment Support**
+### 6. **Production Deployment Support**
 
 **Docker-Ready**:
 - Example Dockerfile in documentation
@@ -137,7 +127,6 @@ The implementation follows the recommended architecture from the problem stateme
 ✅ Background job (APScheduler) - Implemented
 ✅ Runs every 48 hours - Implemented
 ✅ WebSocket notification layer - Not implemented (future enhancement)
-✅ Amazon Music fallback - Implemented (manual data source)
 ```
 
 ## Key Benefits Over Manual Approach
@@ -267,9 +256,8 @@ These were identified in the research but not included in the initial implementa
 
 1. **Apple Music API Access Required**: Users must have Apple Developer account ($99/year)
 2. **Playlist IDs**: Some provided IDs are placeholders; users should verify actual playlist IDs
-3. **Amazon Music**: No automated detection (API doesn't exist)
-4. **Rate Limiting**: Apple Music API has 600 requests/minute limit
-5. **Token Expiration**: Developer tokens expire after 6 months
+3. **Rate Limiting**: Apple Music API has 600 requests/minute limit
+4. **Token Expiration**: Developer tokens expire after 6 months
 
 ## Support and Documentation
 
@@ -288,4 +276,4 @@ These were identified in the research but not included in the initial implementa
 
 ## Conclusion
 
-This implementation delivers a production-ready system for automated spatial audio detection that matches the architecture and features outlined in the problem statement research. Users can now automatically track new Dolby Atmos and spatial audio releases from Apple Music, with a foundation ready for future enhancements like Amazon Music API integration when available.
+This implementation delivers a production-ready system for automated spatial audio detection that matches the architecture and features outlined in the problem statement research. Users can now automatically track new Dolby Atmos spatial audio releases from Apple Music.

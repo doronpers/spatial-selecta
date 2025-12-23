@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "title": "Blinding Lights",
+    "artist": "The Weeknd",
+    "album": "After Hours",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-20",
+    "albumArt": "🌃"
+  },
+  {
+    "id": 2,
+    "title": "Levitating",
+    "artist": "Dua Lipa",
+    "album": "Future Nostalgia",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-18",
+    "albumArt": "💫"
+  },
+  {
+    "id": 3,
+    "title": "As It Was",
+    "artist": "Harry Styles",
+    "album": "Harry's House",
+    "format": "Dolby Atmos",
+    "platform": "Amazon Music",
+    "releaseDate": "2024-12-22",
+    "albumArt": "🏠"
+  },
+  {
+    "id": 4,
+    "title": "Anti-Hero",
+    "artist": "Taylor Swift",
+    "album": "Midnights",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-15",
+    "albumArt": "🌙"
+  },
+  {
+    "id": 5,
+    "title": "Flowers",
+    "artist": "Miley Cyrus",
+    "album": "Endless Summer Vacation",
+    "format": "Dolby Atmos",
+    "platform": "Amazon Music",
+    "releaseDate": "2024-12-19",
+    "albumArt": "🌺"
+  },
+  {
+    "id": 6,
+    "title": "Unholy",
+    "artist": "Sam Smith & Kim Petras",
+    "album": "Gloria",
+    "format": "360 Reality Audio",
+    "platform": "Amazon Music",
+    "releaseDate": "2024-12-16",
+    "albumArt": "👼"
+  },
+  {
+    "id": 7,
+    "title": "Die For You",
+    "artist": "The Weeknd",
+    "album": "Starboy",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-21",
+    "albumArt": "⭐"
+  },
+  {
+    "id": 8,
+    "title": "Karma",
+    "artist": "Taylor Swift",
+    "album": "Midnights",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-14",
+    "albumArt": "🌙"
+  },
+  {
+    "id": 9,
+    "title": "Creepin'",
+    "artist": "Metro Boomin, The Weeknd & 21 Savage",
+    "album": "Heroes & Villains",
+    "format": "Dolby Atmos",
+    "platform": "Amazon Music",
+    "releaseDate": "2024-12-17",
+    "albumArt": "🦸"
+  },
+  {
+    "id": 10,
+    "title": "Kill Bill",
+    "artist": "SZA",
+    "album": "SOS",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-23",
+    "albumArt": "🆘"
+  },
+  {
+    "id": 11,
+    "title": "Calm Down",
+    "artist": "Rema & Selena Gomez",
+    "album": "Rave & Roses",
+    "format": "360 Reality Audio",
+    "platform": "Amazon Music",
+    "releaseDate": "2024-12-13",
+    "albumArt": "🌹"
+  },
+  {
+    "id": 12,
+    "title": "Paint The Town Red",
+    "artist": "Doja Cat",
+    "album": "Scarlet",
+    "format": "Dolby Atmos",
+    "platform": "Apple Music",
+    "releaseDate": "2024-12-22",
+    "albumArt": "🔴"
+  }
+]

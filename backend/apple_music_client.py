@@ -25,15 +25,20 @@ class AppleMusicClient:
     
     BASE_URL = "https://api.music.apple.com/v1"
     
-    # Curated Apple Spatial Audio playlists to monitor
-    # Note: Some IDs below are placeholders. Replace with actual Apple Music playlist IDs.
-    # To find playlist IDs, use the Apple Music API or inspect URLs from Apple Music web player.
+   
     SPATIAL_AUDIO_PLAYLISTS = [
-        "pl.567c7ad7094d4c6e9b687d5fd058e689",  # Example: Made for Spatial Audio (verify ID)
-        # Add more verified playlist IDs below:
-        # "pl.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  # Hits in Spatial Audio
-        # "pl.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",  # Jazz in Spatial Audio
-    ]
+    "pl.ba2404fbc4464b8ba2d60399189cf24e",  # Hits in Spatial Audio
+    "pl.cc74a5aec23942da9cf083c6c4344aee",  # Pop in Spatial Audio
+    "pl.a82d7ac0ee854d8b8a95708c76210023",  # Rock in Spatial Audio
+    "pl.3e9b112e3ffe4287b9fb785251545246",  # Hard Rock in Spatial Audio
+    "pl.9ca5521e31c8408c97377a71030396d1",  # Electronic in Spatial Audio
+    "pl.a0c765aa555e457c9666b2a201de5506",  # Hip-Hop in Spatial Audio
+    "pl.efbd24628ff04ff3b5e416a6e237d753",  # Jazz in Spatial Audio
+    "pl.ffea4bbea2d141cbb0ec67e32059b278",  # Classical in Spatial Audio
+    "pl.924f9f9df2294b9c97f5e40d8862f7e7",  # Country in Spatial Audio
+    "pl.4d2dbe3d55064021870291c2eb29bc72",  # K-Pop in Spatial Audio
+    "pl.04a2d5c0ba2c4afa917241f1e22fa535",  # J-Pop in Spatial Audio
+]
     
     def __init__(self):
         """Initialize Apple Music client with API credentials."""

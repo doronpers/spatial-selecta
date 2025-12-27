@@ -40,6 +40,31 @@ npm start
 
 The website will be available at `http://localhost:8080`
 
+## Production Deployment
+
+**Quick Deploy to Render.com + GoDaddy Domain:**
+
+1. **Prerequisites:** 
+   - Get Apple Music Developer Token ([instructions](GODADDY_DOMAIN_SETUP.md#apple-music-api-token-setup))
+   - Render.com account
+   - GoDaddy DNS access
+
+2. **Deploy:**  
+   See [Quick Start Guide](DEPLOYMENT_QUICKSTART.md) for step-by-step instructions
+
+3. **Full Documentation:**  
+   [Complete GoDaddy + Render Setup Guide](GODADDY_DOMAIN_SETUP.md)
+
+**TL;DR:**
+```bash
+# 1. Deploy to Render using Blueprint (connect GitHub repo)
+# 2. Add APPLE_MUSIC_DEVELOPER_TOKEN to Render environment
+# 3. Add custom domains in Render: spatialselects.com + www
+# 4. Update GoDaddy DNS with A and CNAME records from Render
+# 5. Wait 10-30 minutes for DNS propagation
+# 6. Visit https://spatialselects.com ✅
+```
+
 ## Project Structure
 
 ```

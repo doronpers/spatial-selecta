@@ -1,7 +1,16 @@
 // Configuration
-const API_URL = window.location.hostname === 'localhost' && window.location.port === '8080'
-    ? 'http://localhost:8000/api'  // Local development with separate backend
-    : '/api';  // Production - assume API is on same domain
+const API_URL = (() => {
+    const hostname = window.location.hostname;
+    const isDevelopment = hostname === 'localhost' && window.location.port === '8080';
+    
+    if (isDevelopment) {
+        return 'http://localhost:8000/api';  // Local development
+    }
+    
+    // Production: API is proxied through the same domain
+    // Frontend on spatialselects.com proxies /api/* to backend
+    return '/api';
+})();
 
 // State management
 let allTracks = [];

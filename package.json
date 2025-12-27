@@ -1,7 +1,7 @@
 {
-  "name": "spatial-selecta",
+  "name": "spatialselects",
   "version": "1.0.0",
-  "description": "A website that automatically updates when new music becomes available in Dolby Atmos spatial audio format on Apple Music",
+  "description": "SpatialSelects.com - A website that automatically updates when new music becomes available in Dolby Atmos spatial audio format on Apple Music",
   "main": "index.html",
   "scripts": {
     "start": "npx http-server . -p 8080",

@@ -100,11 +100,13 @@ API documentation at `http://localhost:8000/docs`
 
 ### Monitored Playlists
 
-The system monitors these Apple Music playlists for new spatial audio content:
-- Made for Spatial Audio
-- Hits in Spatial Audio  
+The system monitors Apple Music curated Spatial Audio playlists including:
+- Hits in Spatial Audio
+- Pop in Spatial Audio
+- Rock in Spatial Audio
 - Jazz in Spatial Audio
-- (More can be added in `apple_music_client.py`)
+- Classical in Spatial Audio
+- And more (see `apple_music_client.py` for full list)
 
 ### API Rate Limits
 
@@ -126,10 +128,9 @@ CREATE TABLE tracks (
     release_date DATETIME NOT NULL,
     album_art VARCHAR(10),
     apple_music_id VARCHAR(200) UNIQUE,
-    amazon_music_id VARCHAR(200) UNIQUE,
     discovered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    metadata TEXT
+    extra_metadata TEXT
 );
 ```
 
@@ -212,6 +213,5 @@ curl "http://localhost:8000/api/stats"
 - [ ] WebSocket support for real-time updates
 - [ ] Email notifications for new releases
 - [ ] User authentication and personalized tracking
-- [ ] Support for more streaming platforms
 - [ ] Advanced filtering by genre, artist, etc.
-- [ ] Integration with TIDAL and other platforms
+- [ ] Search functionality

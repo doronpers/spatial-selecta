@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Spatial Selecta** is a minimalist website that tracks and displays the latest music releases available in immersive spatial audio formats (Dolby Atmos, 360 Reality Audio) on Apple Music and Amazon Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
+**Spatial Selecta** is a minimalist website that automatically tracks and displays the latest music releases available in Dolby Atmos spatial audio format on Apple Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
 
 ### Purpose
 - Inform users about new spatial audio releases
@@ -13,24 +13,27 @@
 ### Target Audience
 - Audiophiles interested in spatial audio
 - Music enthusiasts seeking immersive listening experiences
-- Users deciding between Apple Music and Amazon Music for spatial audio content
+- Apple Music users interested in Dolby Atmos content
 
 ### Key Features
-- Weekly automated updates (Fridays at 3 PM ET)
-- Platform filtering (Apple Music, Amazon Music)
-- Format filtering (Dolby Atmos, 360 Reality Audio)
+- Automatic updates via backend scheduler (every 48 hours)
+- Apple Music API integration with audioVariants detection
+- Format filtering (Dolby Atmos)
 - New release badges (last 30 days)
 - Responsive, minimalist design
 - Manual refresh capability
+- REST API for track queries
 
 ## Architecture
 
 ### Technology Stack
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
-- **Data Storage**: Static JSON file (`data.json`)
-- **Build Tools**: None (pure static site)
-- **Development Server**: `http-server` (via npm)
-- **Deployment**: Static hosting (GitHub Pages, Netlify, Vercel, etc.)
+- **Backend**: Python FastAPI with SQLAlchemy ORM
+- **Database**: PostgreSQL (production) / SQLite (development)
+- **Scheduler**: APScheduler for background jobs
+- **Data Fallback**: Static JSON file (`data.json`)
+- **Development Server**: `http-server` (frontend), `uvicorn` (backend)
+- **Deployment**: Docker, Render.com, or traditional VPS
 
 ### File Structure
 ```
@@ -68,11 +71,11 @@ graph TD
 
 The app maintains the following global state:
 
-- `allTracks`: Array of all loaded tracks from `data.json`
+- `allTracks`: Array of all loaded tracks from API or `data.json`
 - `filteredTracks`: Array of tracks matching current filter criteria
 - `currentFilters`: Object containing active filter selections
-  - `platform`: 'all' | 'Apple Music' | 'Amazon Music'
-  - `format`: 'all' | 'Dolby Atmos' | '360 Reality Audio'
+  - `platform`: 'all' | 'Apple Music'
+  - `format`: 'all' | 'Dolby Atmos'
 
 ## Code Organization
 
@@ -201,10 +204,10 @@ interface Track {
   title: string;                 // Song title
   artist: string;                // Artist name
   album: string;                 // Album name
-  format: "Dolby Atmos" | "360 Reality Audio";  // Audio format
-  platform: "Apple Music" | "Amazon Music";     // Platform
+  format: "Dolby Atmos";         // Audio format
+  platform: "Apple Music";       // Platform
   releaseDate: string;           // ISO date (YYYY-MM-DD)
-  albumArt: string;             // Emoji placeholder (currently unused)
+  albumArt: string;             // Emoji placeholder
 }
 ```
 
@@ -580,6 +583,6 @@ graph TD
 
 ---
 
-**Last Updated**: 2025-01-27
-**Version**: 1.0.0
+**Last Updated**: 2025-12-27
+**Version**: 2.0.0
 

@@ -40,9 +40,9 @@ services:
           name: spatial-selecta-api
           property: host
 
+databases:
   # PostgreSQL Database
-  - type: pspg
-    name: spatial-selecta-db
+  - name: spatial-selecta-db
     databaseName: spatial_selecta
     user: spatial_user
 

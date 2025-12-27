@@ -13,10 +13,9 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: ALLOWED_ORIGINS
-        value: https://spatialselects.com,https://www.spatialselects.com
+        sync: false
       - key: REFRESH_API_TOKEN
         generateValue: true
-        sync: false
       - key: APPLE_MUSIC_DEVELOPER_TOKEN
         sync: false
       - key: DATABASE_URL

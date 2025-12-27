@@ -56,10 +56,41 @@ app.add_middleware(
 )
 
 # Rate limiting storage (in-memory, simple implementation)
-# In production, use Redis or similar for distributed rate limiting
+# NOTE: This is a basic implementation suitable for single-instance deployments.
+# For production with multiple instances, use Redis or similar distributed cache.
 rate_limit_store = {}
 RATE_LIMIT_WINDOW = 60  # seconds
 RATE_LIMIT_MAX_REQUESTS = 100  # per window per IP
+_last_cleanup_time = time.time()
+CLEANUP_INTERVAL = 300  # Clean up old entries every 5 minutes
+
+
+def _cleanup_rate_limit_store():
+    """Periodically clean up old rate limit entries to prevent memory leaks."""
+    global _last_cleanup_time
+    current_time = time.time()
+    
+    # Only cleanup every CLEANUP_INTERVAL seconds
+    if current_time - _last_cleanup_time < CLEANUP_INTERVAL:
+        return
+    
+    _last_cleanup_time = current_time
+    cutoff_time = current_time - RATE_LIMIT_WINDOW
+    
+    # Remove IPs with no recent requests
+    ips_to_remove = [
+        ip for ip, req_times in rate_limit_store.items()
+        if not req_times or max(req_times, default=0) < cutoff_time
+    ]
+    for ip in ips_to_remove:
+        del rate_limit_store[ip]
+    
+    # Clean old requests from remaining IPs
+    for ip in list(rate_limit_store.keys()):
+        rate_limit_store[ip] = [
+            req_time for req_time in rate_limit_store[ip]
+            if req_time >= cutoff_time
+        ]
 
 
 # Rate limiting function
@@ -75,10 +106,18 @@ def check_rate_limit(client_ip: str) -> bool:
     """
     current_time = time.time()
     
-    # Clean old entries
+    # Periodic cleanup to prevent memory leaks
+    _cleanup_rate_limit_store()
+    
+    # Initialize IP entry if not exists
+    if client_ip not in rate_limit_store:
+        rate_limit_store[client_ip] = []
+    
+    # Clean old entries for this IP
+    cutoff_time = current_time - RATE_LIMIT_WINDOW
     rate_limit_store[client_ip] = [
-        req_time for req_time in rate_limit_store.get(client_ip, [])
-        if current_time - req_time < RATE_LIMIT_WINDOW
+        req_time for req_time in rate_limit_store[client_ip]
+        if req_time >= cutoff_time
     ]
     
     # Check limit
@@ -220,12 +259,16 @@ async def get_new_tracks(
     if not check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
     
-    cutoff_date = datetime.now() - timedelta(days=days)
-    tracks = db.query(Track).filter(
-        Track.release_date >= cutoff_date
-    ).order_by(Track.release_date.desc()).all()
-    
-    return tracks
+    try:
+        cutoff_date = datetime.now() - timedelta(days=days)
+        tracks = db.query(Track).filter(
+            Track.release_date >= cutoff_date
+        ).order_by(Track.release_date.desc()).all()
+        
+        return tracks
+    except Exception as e:
+        logger.error(f"Error fetching new tracks: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error while fetching tracks")
 
 
 @app.get("/api/tracks/{track_id}", response_model=TrackResponse)
@@ -253,10 +296,16 @@ async def get_track(
     if track_id <= 0 or track_id > 2147483647:
         raise HTTPException(status_code=400, detail="Track ID must be a positive integer")
     
-    track = db.query(Track).filter(Track.id == track_id).first()
-    if not track:
-        raise HTTPException(status_code=404, detail="Track not found")
-    return track
+    try:
+        track = db.query(Track).filter(Track.id == track_id).first()
+        if not track:
+            raise HTTPException(status_code=404, detail="Track not found")
+        return track
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching track {track_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error while fetching track")
 
 
 @app.post("/api/refresh", response_model=RefreshResponse)

@@ -70,7 +70,8 @@ def scheduled_spatial_audio_scan():
         result = sync_spatial_audio_tracks(db)
         logger.info(f"Scheduled scan complete: {result['tracks_added']} added, {result['tracks_updated']} updated")
     except Exception as e:
-        logger.error(f"Error during scheduled scan: {e}")
+        logger.error(f"Error during scheduled scan: {e}", exc_info=True)
+        # Don't raise - allow scheduler to continue running
     finally:
         db.close()
 

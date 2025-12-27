@@ -292,8 +292,9 @@ function setupEventListeners() {
 // Apply filters to tracks
 function applyFilters() {
     filteredTracks = allTracks.filter(track => {
+        const platformMatch = currentFilters.platform === 'all' || track.platform === currentFilters.platform;
         const formatMatch = currentFilters.format === 'all' || track.format === currentFilters.format;
-        return formatMatch;
+        return platformMatch && formatMatch;
     });
     
     renderTracks();
@@ -395,53 +396,83 @@ function escapeHtml(text) {
 }
 
 // Schedule auto-refresh for Fridays at 3 PM ET
+// Note: This is a client-side implementation that only works when the page is open.
+// For production, use server-side cron jobs or scheduled tasks.
 function scheduleWeeklyRefresh() {
-    let refreshInterval = null;
-    let lastRefreshMinute = -1;
-    
-    const checkAndRefresh = async () => {
-        // Use Page Visibility API to pause when tab is hidden
-        if (document.hidden) {
-            return;
-        }
-        
+    // Calculate milliseconds until next Friday 3 PM ET
+    const getNextRefreshTime = () => {
         const now = new Date();
+        const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const etNowTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
         
-        // Convert to ET (UTC-5 or UTC-4 during DST)
-        const etOffset = -5 * 60; // Standard time offset in minutes
-        const localOffset = now.getTimezoneOffset();
-        const etTime = new Date(now.getTime() + (localOffset + etOffset) * 60000);
+        // Get current ET day and time
+        const currentDay = etNowTime.getDay(); // 0 = Sunday, 5 = Friday
+        const currentHour = etNowTime.getHours();
+        const currentMinute = etNowTime.getMinutes();
         
-        // Check if it's Friday (5) and 3 PM (15:00)
-        const isFriday = etTime.getDay() === 5;
-        const hour = etTime.getHours();
-        const minute = etTime.getMinutes();
-        
-        // Refresh if it's Friday between 3:00 PM and 3:01 PM ET (only once per minute)
-        if (isFriday && hour === 15 && minute === 0 && minute !== lastRefreshMinute) {
-            lastRefreshMinute = minute;
-            await loadMusicData();
-            applyFilters();
-            updateLastUpdated();
+        // Calculate days until next Friday
+        let daysUntilFriday = (5 - currentDay + 7) % 7;
+        if (daysUntilFriday === 0 && (currentHour < 15 || (currentHour === 15 && currentMinute === 0))) {
+            // It's Friday and before 3 PM, refresh today
+            daysUntilFriday = 0;
+        } else if (daysUntilFriday === 0) {
+            // It's Friday but after 3 PM, refresh next Friday
+            daysUntilFriday = 7;
         }
+        
+        // Calculate target time: next Friday at 3:00 PM ET
+        const targetET = new Date(etNowTime);
+        targetET.setDate(targetET.getDate() + daysUntilFriday);
+        targetET.setHours(15, 0, 0, 0);
+        
+        // Convert ET time back to local time for setTimeout
+        const etOffset = etNowTime.getTime() - now.getTime();
+        const targetLocal = new Date(targetET.getTime() - etOffset);
+        
+        const msUntilRefresh = targetLocal.getTime() - now.getTime();
+        return Math.max(msUntilRefresh, 60000); // Minimum 1 minute
     };
     
-    // Check every minute, but pause when tab is hidden
-    refreshInterval = setInterval(checkAndRefresh, 60000);
+    const scheduleNextRefresh = () => {
+        const msUntilRefresh = getNextRefreshTime();
+        
+        setTimeout(async () => {
+            // Only refresh if page is visible
+            if (!document.hidden) {
+                console.log('Auto-refreshing data (scheduled weekly refresh)');
+                await loadMusicData();
+                applyFilters();
+                updateLastUpdated();
+            }
+            
+            // Schedule next refresh (weekly)
+            scheduleNextRefresh();
+        }, msUntilRefresh);
+    };
     
-    // Pause interval when tab is hidden, resume when visible
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            // Tab is hidden, interval will naturally pause checks
-            return;
-        } else {
-            // Tab is visible, check immediately
-            checkAndRefresh();
+    // Start scheduling
+    scheduleNextRefresh();
+    
+    // Also check when page becomes visible (in case we missed the scheduled time)
+    document.addEventListener('visibilitychange', async () => {
+        if (!document.hidden) {
+            const etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const isFriday = etNow.getDay() === 5;
+            const is3PM = etNow.getHours() === 15 && etNow.getMinutes() < 5; // 5 minute window
+            
+            if (isFriday && is3PM) {
+                // Check if we should refresh (avoid multiple refreshes)
+                const lastRefresh = localStorage.getItem('lastAutoRefresh');
+                const now = Date.now();
+                if (!lastRefresh || now - parseInt(lastRefresh) > 300000) { // 5 minutes
+                    localStorage.setItem('lastAutoRefresh', now.toString());
+                    await loadMusicData();
+                    applyFilters();
+                    updateLastUpdated();
+                }
+            }
         }
     });
-    
-    // Initial check
-    checkAndRefresh();
 }
 
 scheduleWeeklyRefresh();

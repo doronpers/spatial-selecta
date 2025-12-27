@@ -4,11 +4,12 @@ A website that automatically tracks and displays the latest music releases avail
 
 ## Features
 
-- **Weekly Updates**: Automatically refreshes music data every Friday at 3 PM ET
-- **Format Filtering**: Filter by audio format (Dolby Atmos)
+- **Automated Discovery**: Backend automatically scans for new spatial audio releases every 48 hours
+- **Platform Filtering**: Filter by platform (Apple Music, Amazon Music)
+- **Format Filtering**: Filter by audio format (Dolby Atmos, 360 Reality Audio)
 - **New Release Badges**: Highlights releases from the last 30 days
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Minimalist Interface**: Clean, typography-focused design following Dieter Rams' principles
+- **Minimalist Interface**: Clean, typography-focused design
 
 ## Getting Started
 
@@ -78,11 +79,12 @@ spatial-selecta/
 
 ## How It Works
 
-1. **Data Loading**: The app loads music releases from `data.json`
-2. **Display**: Tracks are displayed in a responsive grid with album art, artist info, and format badges
-3. **Filtering**: Users can filter by platform and format in real-time
-4. **Auto-refresh**: Data automatically refreshes every Friday at 3 PM ET to show latest releases
-5. **Manual Refresh**: Users can manually refresh data using the refresh button
+1. **Backend Discovery**: Python backend automatically scans Apple Music playlists every 48 hours for spatial audio tracks
+2. **Data Storage**: Discovered tracks are stored in a database (SQLite for development, PostgreSQL for production)
+3. **API**: FastAPI backend provides REST endpoints for querying tracks
+4. **Frontend Display**: Frontend loads tracks from the API (with fallback to `data.json`) and displays them in a responsive grid
+5. **Filtering**: Users can filter by platform and format in real-time
+6. **Manual Refresh**: Users can manually refresh data using the refresh button (reloads from API)
 
 ## Adding New Releases
 
@@ -103,9 +105,11 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 
 ### Supported Formats
 - Dolby Atmos
+- 360 Reality Audio
 
 ### Supported Platforms
 - Apple Music
+- Amazon Music
 
 ## Backend API
 
@@ -138,6 +142,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # Edit .env and add your Apple Music Developer Token
+# OR ensure your .p8 private key file is in the project root for automatic generation
 ```
 
 3. Run the backend:
@@ -157,6 +162,7 @@ uvicorn backend.main:app --reload --port 8000
 ## Future Enhancements
 
 - ✅ Integration with Apple Music API for automatic data fetching
+- Amazon Music API integration
 - User accounts and favorites
 - Playlist creation
 - Email notifications for new releases

@@ -12,7 +12,7 @@
     <header>
         <div class="container">
             <h1>Spatial Selecta</h1>
-            <p class="tagline">Latest Apple Music releases in Dolby Atmos</p>
+            <p class="tagline">Latest releases in spatial audio formats</p>
             <div class="last-updated">
                 Last updated: <span id="lastUpdated">Loading...</span>
             </div>
@@ -22,10 +22,19 @@
     <main class="container">
         <section class="filters">
             <div class="filter-group">
+                <label for="platformFilter">Platform:</label>
+                <select id="platformFilter">
+                    <option value="all">All Platforms</option>
+                    <option value="Apple Music">Apple Music</option>
+                    <option value="Amazon Music">Amazon Music</option>
+                </select>
+            </div>
+            <div class="filter-group">
                 <label for="formatFilter">Format:</label>
                 <select id="formatFilter">
                     <option value="all">All Formats</option>
                     <option value="Dolby Atmos">Dolby Atmos</option>
+                    <option value="360 Reality Audio">360 Reality Audio</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -44,7 +53,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 Spatial Selecta | Tracking Apple Music Spatial Audio releases</p>
+            <p>© 2026 Spatial Selecta | Tracking spatial audio releases</p>
         </div>
     </footer>
 

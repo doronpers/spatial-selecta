@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Spatial Selecta** is a minimalist website that automatically tracks and displays the latest music releases available in Dolby Atmos spatial audio format on Apple Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
+**Spatial Selecta** is a minimalist website that tracks and displays the latest music releases available in immersive spatial audio formats (Dolby Atmos, 360 Reality Audio) on Apple Music and Amazon Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
 
 ### Purpose
 - Inform users about new spatial audio releases
@@ -13,38 +13,49 @@
 ### Target Audience
 - Audiophiles interested in spatial audio
 - Music enthusiasts seeking immersive listening experiences
-- Apple Music users interested in Dolby Atmos content
+- Users deciding between Apple Music and Amazon Music for spatial audio content
 
 ### Key Features
-- Automatic updates via backend scheduler (every 48 hours)
-- Apple Music API integration with audioVariants detection
-- Format filtering (Dolby Atmos)
+- Automated backend discovery (every 48 hours via scheduler)
+- Platform filtering (Apple Music, Amazon Music)
+- Format filtering (Dolby Atmos, 360 Reality Audio)
 - New release badges (last 30 days)
 - Responsive, minimalist design
 - Manual refresh capability
-- REST API for track queries
+- REST API for programmatic access
 
 ## Architecture
 
 ### Technology Stack
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
 - **Backend**: Python FastAPI with SQLAlchemy ORM
-- **Database**: PostgreSQL (production) / SQLite (development)
-- **Scheduler**: APScheduler for background jobs
-- **Data Fallback**: Static JSON file (`data.json`)
-- **Development Server**: `http-server` (frontend), `uvicorn` (backend)
-- **Deployment**: Docker, Render.com, or traditional VPS
+- **Data Storage**: SQLite (development) or PostgreSQL (production), with `data.json` fallback
+- **Scheduler**: APScheduler for background jobs (runs every 48 hours)
+- **API Integration**: Apple Music API for automatic track discovery
+- **Build Tools**: None (pure static site)
+- **Development Server**: `http-server` (via npm) for frontend, `uvicorn` for backend
+- **Deployment**: Static hosting for frontend (GitHub Pages, Netlify, Vercel), backend on Render/VPS
 
 ### File Structure
 ```
 spatial-selecta/
-├── index.html      # Main HTML structure and layout
-├── styles.css      # All styling, responsive design, CSS variables
-├── app.js          # Application logic, data handling, rendering
-├── data.json       # Music releases database (JSON array)
-├── package.json     # Project metadata and dependencies
-├── README.md       # User-facing documentation
-└── agents.md       # This file - AI agent instructions
+├── index.html              # Main HTML structure and layout
+├── styles.css              # All styling, responsive design, CSS variables
+├── app.js                   # Frontend application logic, data handling, rendering
+├── data.json                # Music releases database (JSON array, fallback)
+├── package.json             # Frontend project metadata and dependencies
+├── requirements.txt         # Backend Python dependencies
+├── backend/
+│   ├── main.py              # FastAPI application and endpoints
+│   ├── models.py            # SQLAlchemy database models
+│   ├── schemas.py           # Pydantic request/response schemas
+│   ├── database.py          # Database configuration and session management
+│   ├── scheduler.py         # Background job scheduler (APScheduler)
+│   └── apple_music_client.py # Apple Music API client
+├── README.md                # User-facing documentation
+├── SETUP.md                 # Setup guide
+├── DEPLOYMENT.md            # Deployment guide
+└── agents.md                # This file - AI agent instructions
 ```
 
 ### Data Flow
@@ -71,11 +82,11 @@ graph TD
 
 The app maintains the following global state:
 
-- `allTracks`: Array of all loaded tracks from API or `data.json`
+- `allTracks`: Array of all loaded tracks from `data.json`
 - `filteredTracks`: Array of tracks matching current filter criteria
 - `currentFilters`: Object containing active filter selections
-  - `platform`: 'all' | 'Apple Music'
-  - `format`: 'all' | 'Dolby Atmos'
+  - `platform`: 'all' | 'Apple Music' | 'Amazon Music'
+  - `format`: 'all' | 'Dolby Atmos' | '360 Reality Audio'
 
 ## Code Organization
 
@@ -204,10 +215,10 @@ interface Track {
   title: string;                 // Song title
   artist: string;                // Artist name
   album: string;                 // Album name
-  format: "Dolby Atmos";         // Audio format
-  platform: "Apple Music";       // Platform
+  format: "Dolby Atmos" | "360 Reality Audio";  // Audio format
+  platform: "Apple Music" | "Amazon Music";     // Platform
   releaseDate: string;           // ISO date (YYYY-MM-DD)
-  albumArt: string;             // Emoji placeholder
+  albumArt: string;             // Emoji placeholder (currently unused)
 }
 ```
 
@@ -583,6 +594,6 @@ graph TD
 
 ---
 
-**Last Updated**: 2025-12-27
-**Version**: 2.0.0
+**Last Updated**: 2025-01-27
+**Version**: 1.0.0
 

@@ -14,7 +14,9 @@ class TrackBase(BaseModel):
     format: str
     platform: str
     release_date: datetime
+    atmos_release_date: Optional[datetime] = None
     album_art: Optional[str] = None
+    music_link: Optional[str] = None
 
 
 class TrackCreate(TrackBase):

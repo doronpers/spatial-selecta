@@ -1,10 +1,10 @@
-# Spatial Selecta - Complete Setup Guide
+# SpatialSelects.com - Complete Setup Guide
 
-This guide walks you through setting up the complete Spatial Selecta system with both frontend and backend components.
+This guide walks you through setting up the complete SpatialSelects.com system with both frontend and backend components.
 
 ## Overview
 
-Spatial Selecta automatically tracks and displays Dolby Atmos spatial audio releases from Apple Music. The system consists of:
+SpatialSelects.com automatically tracks and displays Dolby Atmos spatial audio releases from Apple Music. The system consists of:
 
 1. **Frontend**: Static HTML/CSS/JS website for displaying tracks
 2. **Backend**: Python FastAPI server with Apple Music API integration
@@ -298,7 +298,7 @@ Create `/etc/systemd/system/spatial-selecta.service`:
 
 ```ini
 [Unit]
-Description=Spatial Selecta Backend
+Description=SpatialSelects.com Backend
 After=network.target
 
 [Service]

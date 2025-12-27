@@ -1,4 +1,4 @@
-# Example Docker Compose configuration for Spatial Selecta
+# Example Docker Compose configuration for SpatialSelects.com
 # Copy to docker-compose.yml and configure
 
 version: '3.8'

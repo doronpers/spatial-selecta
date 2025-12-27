@@ -102,7 +102,7 @@ Render will provide you with DNS records. They will look like:
 
 ### 5.1 Check Frontend
 Visit https://spatialselects.com - you should see:
-- ✅ Spatial Selecta homepage
+- ✅ SpatialSelects.com homepage
 - ✅ Music grid with tracks
 - ✅ No CORS errors in browser console
 

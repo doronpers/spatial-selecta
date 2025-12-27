@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying Spatial Selecta to production, including DNS configuration and hosting setup.
+This guide covers deploying SpatialSelects.com to production, including DNS configuration and hosting setup.
 
 ## 🚀 Recommended: Deploy to Render (Easiest)
 
@@ -23,7 +23,7 @@ If you need more control or want to learn server management, see the options bel
 
 ## Architecture Overview
 
-Spatial Selecta consists of:
+SpatialSelects.com consists of:
 - **Frontend**: Static HTML/CSS/JS files served via web server
 - **Backend API**: Python FastAPI application (port 8000)
 - **Database**: SQLite (development) or PostgreSQL (production recommended)
@@ -136,7 +136,7 @@ Create `/etc/systemd/system/spatial-selecta.service`:
 
 ```ini
 [Unit]
-Description=Spatial Selecta Backend API
+Description=SpatialSelects.com Backend API
 After=network.target postgresql.service
 
 [Service]

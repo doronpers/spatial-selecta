@@ -1,4 +1,4 @@
-# Spatial Selecta 🎵
+# SpatialSelects.com 🎵
 
 A website that automatically tracks and displays the latest music releases available in Dolby Atmos spatial audio format on Apple Music.
 
@@ -68,7 +68,7 @@ The website will be available at `http://localhost:8080`
 ## Project Structure
 
 ```
-spatial-selecta/
+spatialselects/
 ├── index.html      # Main HTML structure
 ├── styles.css      # Styling and responsive design
 ├── app.js          # JavaScript application logic
@@ -113,7 +113,7 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 
 ## Backend API
 
-Spatial Selecta now includes a Python backend that automatically detects and tracks spatial audio releases using the Apple Music API.
+SpatialSelects.com now includes a Python backend that automatically detects and tracks spatial audio releases using the Apple Music API.
 
 ### Features
 

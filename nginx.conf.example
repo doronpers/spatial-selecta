@@ -1,4 +1,4 @@
-# Example Nginx configuration for Spatial Selecta
+# Example Nginx configuration for SpatialSelects.com
 # Copy to /etc/nginx/sites-available/spatial-selecta
 
 # Redirect HTTP to HTTPS

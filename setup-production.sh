@@ -1,11 +1,11 @@
 #!/bin/bash
-# Production Setup Script for Spatial Selecta
+# Production Setup Script for SpatialSelects.com
 # This script helps set up production environment variables
 
 set -e
 
 echo "=========================================="
-echo "Spatial Selecta Production Setup"
+echo "SpatialSelects.com Production Setup"
 echo "=========================================="
 echo ""
 

@@ -1,8 +1,8 @@
-# Spatial Selecta - Agent Instructions
+# SpatialSelects.com - Agent Instructions
 
 ## Project Overview
 
-**Spatial Selecta** is a minimalist website that tracks and displays the latest music releases available in immersive spatial audio formats (Dolby Atmos, 360 Reality Audio) on Apple Music and Amazon Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
+**SpatialSelects.com** is a minimalist website that tracks and displays the latest music releases available in immersive spatial audio formats (Dolby Atmos, 360 Reality Audio) on Apple Music and Amazon Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
 
 ### Purpose
 - Inform users about new spatial audio releases
@@ -93,7 +93,7 @@ The app maintains the following global state:
 ### `index.html` Structure
 
 **Header Section** (`<header>`):
-- Site title: "Spatial Selecta"
+- Site title: "SpatialSelects.com"
 - Tagline: "Latest releases in spatial audio formats"
 - Last updated timestamp (dynamically updated)
 

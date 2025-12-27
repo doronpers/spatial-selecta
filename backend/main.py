@@ -1,5 +1,5 @@
 """
-Main FastAPI application for Spatial Selecta.
+Main FastAPI application for SpatialSelects.com.
 Provides API endpoints for spatial audio track management and automatic detection.
 """
 from fastapi import FastAPI, Depends, HTTPException, Header, Query, Request
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Spatial Selecta API",
+    title="SpatialSelects.com API",
     description="API for tracking spatial audio releases from Apple Music",
     version="1.0.0"
 )
@@ -165,7 +165,7 @@ def verify_refresh_token(authorization: Optional[str] = Header(None)) -> bool:
 @app.on_event("startup")
 async def startup_event():
     """Initialize database and start background scheduler on app startup."""
-    logger.info("Starting Spatial Selecta API...")
+    logger.info("Starting SpatialSelects.com API...")
     init_db()
     start_scheduler()
     logger.info("Application started successfully")
@@ -182,7 +182,7 @@ async def startup_event():
 async def root():
     """Root endpoint with API information."""
     return {
-        "name": "Spatial Selecta API",
+        "name": "SpatialSelects.com API",
         "version": "1.0.0",
         "description": "Automatic tracking of spatial audio releases"
     }

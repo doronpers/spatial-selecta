@@ -131,7 +131,7 @@ async function loadMusicData() {
             allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
             
             filteredTracks = [...allTracks];
-            console.log(`Loaded ${allTracks.length} tracks from data.json`);
+            console.log(`Loaded ${allTracks.length} tracks from data.json (fallback)`);
         } catch (fallbackError) {
             console.error('Error loading music data:', fallbackError);
             // Show user-friendly error message

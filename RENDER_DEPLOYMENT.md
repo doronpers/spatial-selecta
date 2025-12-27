@@ -1,6 +1,6 @@
-# Deploying Spatial Selecta to Render
+# Deploying SpatialSelects.com to Render
 
-This guide walks you through deploying Spatial Selecta to Render.com - the easiest and most cost-effective option for this project.
+This guide walks you through deploying SpatialSelects.com to Render.com - the easiest and most cost-effective option for this project.
 
 ## Why Render?
 
@@ -406,5 +406,5 @@ DATABASE_URL=<provided-by-render>
 
 ---
 
-**That's it!** Your Spatial Selecta app is now live on Render. 🚀
+**That's it!** Your SpatialSelects.com app is now live on Render. 🚀
 

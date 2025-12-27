@@ -8,6 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 from starlette.requests import Request as StarletteRequest
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime, timedelta
 import logging
@@ -18,8 +19,8 @@ import hmac
 import hashlib
 
 from backend.database import get_db, init_db
-from backend.models import Track
-from backend.schemas import TrackResponse, RefreshResponse
+from backend.models import Track, CommunityRating, Engineer, TrackCredit
+from backend.schemas import TrackResponse, RefreshResponse, RatingRequest, RatingResponse, EngineerResponse
 from backend.scheduler import start_scheduler, trigger_manual_refresh
 
 # Configure logging
@@ -66,12 +67,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if IS_PRODUCTION:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
             response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-        
         # Remove server header (information disclosure)
-        response.headers.pop("server", None)
+        if "server" in response.headers:
+            del response.headers["server"]
         
         return response
-
 
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -507,10 +507,6 @@ async def get_stats(request: Request, db: Session = Depends(get_db)):
 
 
 # Phase 3: Community & Quality API
-from backend.models import CommunityRating, Engineer, TrackCredit
-from backend.schemas import RatingRequest, RatingResponse, EngineerResponse
-from sqlalchemy import func
-
 @app.post("/api/tracks/{track_id}/rate", response_model=RatingResponse)
 async def rate_track(
     request: Request,
@@ -546,15 +542,20 @@ async def rate_track(
     # Calculate new averages
     # (In high scale, do this async/background, but here inline is fine)
     avg_score = db.query(func.avg(CommunityRating.immersiveness_score)).filter(CommunityRating.track_id == track_id).scalar()
-    fake_count = db.query(CommunityRating).filter(CommunityRating.track_id == track_id, CommunityRating.is_fake_atmos == True).count()
+    fake_count = db.query(CommunityRating).filter(CommunityRating.track_id == track_id, CommunityRating.is_fake_atmos).count()
     total = db.query(CommunityRating).filter(CommunityRating.track_id == track_id).count()
-    
-    # Update track cache
-    track.avg_immersiveness = float(avg_score) if avg_score else 0.0
+
+    # Update track cache via SQLAlchemy's update method since direct attribute assignment to Column[Unknown] is not allowed.
+    update_data = {}
+    update_data['avg_immersiveness'] = float(avg_score) if avg_score else 0.0
+
     # Determine hall of shame threshold (e.g., >30% fake reports with >5 votes)
     if total > 5 and (fake_count / total) > 0.3:
-        track.hall_of_shame = True
-        
+        update_data['hall_of_shame'] = True
+
+    if update_data:
+        db.query(Track).filter(Track.id == track_id).update(update_data, synchronize_session=False)
+
     db.commit()
     
     return {

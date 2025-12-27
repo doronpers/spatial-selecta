@@ -33,6 +33,8 @@ services:
     buildCommand: ""
     staticPublishPath: .
     routes:
+      # Proxy /api/* requests to backend service
+      # Note: Update this URL if you change the backend service name
       - type: rewrite
         source: /api/*
         destination: https://spatial-selecta-api.onrender.com/api/*

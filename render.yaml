@@ -13,8 +13,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: ALLOWED_ORIGINS
-        generateValue: true
-        sync: false
+        value: https://spatialselects.com,https://www.spatialselects.com
       - key: REFRESH_API_TOKEN
         generateValue: true
         sync: false
@@ -33,16 +32,12 @@ services:
     env: static
     buildCommand: ""
     staticPublishPath: .
-    envVars:
-      - key: API_URL
-        fromService:
-          type: web
-          name: spatial-selecta-api
-          property: host
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://spatial-selecta-api.onrender.com/api/*
 
 databases:
-  # PostgreSQL Database
   - name: spatial-selecta-db
     databaseName: spatial_selecta
     user: spatial_user
-

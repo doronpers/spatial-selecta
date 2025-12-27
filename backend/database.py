@@ -58,10 +58,37 @@ def run_migrations():
             if 'sqlite' in DATABASE_URL:
                 conn.execute(text('ALTER TABLE tracks ADD COLUMN music_link VARCHAR(500)'))
             else:
-                # PostgreSQL syntax
                 conn.execute(text('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS music_link VARCHAR(500)'))
             conn.commit()
             print("Migration: Added music_link column to tracks table")
+
+    # Phase 1 Migrations
+    if 'hall_of_shame' not in existing_columns:
+        with engine.connect() as conn:
+            if 'sqlite' in DATABASE_URL:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN hall_of_shame BOOLEAN DEFAULT 0'))
+            else:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS hall_of_shame BOOLEAN DEFAULT FALSE'))
+            conn.commit()
+            print("Migration: Added hall_of_shame column")
+
+    if 'avg_immersiveness' not in existing_columns:
+        with engine.connect() as conn:
+            if 'sqlite' in DATABASE_URL:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN avg_immersiveness FLOAT'))
+            else:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS avg_immersiveness FLOAT'))
+            conn.commit()
+            print("Migration: Added avg_immersiveness column")
+
+    if 'review_summary' not in existing_columns:
+        with engine.connect() as conn:
+            if 'sqlite' in DATABASE_URL:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN review_summary TEXT'))
+            else:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS review_summary TEXT'))
+            conn.commit()
+            print("Migration: Added review_summary column")
 
 
 def get_db():

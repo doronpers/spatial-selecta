@@ -4,12 +4,18 @@ Provides API endpoints for spatial audio track management and automatic detectio
 """
 from fastapi import FastAPI, Depends, HTTPException, Header, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from starlette.requests import Request as StarletteRequest
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime, timedelta
 import logging
 import os
 import time
+import secrets
+import hmac
+import hashlib
 
 from backend.database import get_db, init_db
 from backend.models import Track
@@ -24,8 +30,51 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="SpatialSelects.com API",
     description="API for tracking spatial audio releases from Apple Music",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs" if not os.getenv("ENVIRONMENT") == "production" else None,
+    redoc_url="/redoc" if not os.getenv("ENVIRONMENT") == "production" else None,
 )
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware to add security headers to all responses."""
+    
+    async def dispatch(self, request: StarletteRequest, call_next):
+        # Check request size (basic protection)
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                size = int(content_length)
+                if size > MAX_REQUEST_SIZE:
+                    return Response(
+                        content="Request too large",
+                        status_code=413,
+                        headers={"Content-Type": "text/plain"}
+                    )
+            except ValueError:
+                pass  # Invalid content-length, let it through
+        
+        response = await call_next(request)
+        
+        # Security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # HSTS (only in production with HTTPS)
+        if IS_PRODUCTION:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+        
+        # Remove server header (information disclosure)
+        response.headers.pop("server", None)
+        
+        return response
+
+
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Security Configuration
 # In production, NEVER use "*" - specify exact origins
@@ -59,10 +108,13 @@ app.add_middleware(
 # NOTE: This is a basic implementation suitable for single-instance deployments.
 # For production with multiple instances, use Redis or similar distributed cache.
 rate_limit_store = {}
-RATE_LIMIT_WINDOW = 60  # seconds
-RATE_LIMIT_MAX_REQUESTS = 100  # per window per IP
+RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
+RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "100"))  # per window per IP
 _last_cleanup_time = time.time()
 CLEANUP_INTERVAL = 300  # Clean up old entries every 5 minutes
+
+# Request size limits (prevent DoS via large payloads)
+MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
 
 
 def _cleanup_rate_limit_store():
@@ -104,6 +156,21 @@ def check_rate_limit(client_ip: str) -> bool:
     Returns:
         True if within limit, False if exceeded
     """
+    # Prevent rate limit store from growing unbounded
+    if len(rate_limit_store) > 10000:  # Max 10k unique IPs
+        logger.warning("Rate limit store size exceeded threshold, performing aggressive cleanup")
+        _cleanup_rate_limit_store()
+        # If still too large, clear oldest entries
+        if len(rate_limit_store) > 10000:
+            sorted_ips = sorted(
+                rate_limit_store.items(),
+                key=lambda x: max(x[1], default=0),
+                reverse=True
+            )
+            # Keep only top 5000 most recent IPs
+            rate_limit_store.clear()
+            rate_limit_store.update(dict(sorted_ips[:5000]))
+    
     current_time = time.time()
     
     # Periodic cleanup to prevent memory leaks
@@ -122,6 +189,7 @@ def check_rate_limit(client_ip: str) -> bool:
     
     # Check limit
     if len(rate_limit_store[client_ip]) >= RATE_LIMIT_MAX_REQUESTS:
+        logger.warning(f"Rate limit exceeded for IP: {client_ip[:8]}...")
         return False
     
     # Add current request
@@ -130,19 +198,41 @@ def check_rate_limit(client_ip: str) -> bool:
 
 
 def get_client_ip(request: Request) -> str:
-    """Extract client IP from request."""
-    # Check for forwarded IP (when behind proxy)
+    """
+    Extract client IP from request.
+    Handles various proxy headers securely.
+    """
+    # Priority order for IP extraction (most trusted first)
+    # X-Real-IP is typically set by reverse proxies (nginx, etc.)
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        # Validate IP format (basic check)
+        ip_parts = real_ip.strip().split(".")
+        if len(ip_parts) == 4 and all(part.isdigit() and 0 <= int(part) <= 255 for part in ip_parts):
+            return real_ip.strip()
+    
+    # X-Forwarded-For can be spoofed, so we take the first (original) IP
+    # Only trust if we're behind a known proxy (check via environment)
     forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    if forwarded and os.getenv("TRUST_PROXY", "false").lower() == "true":
+        # Take first IP in chain (original client)
+        first_ip = forwarded.split(",")[0].strip()
+        # Basic validation
+        if first_ip and not first_ip.startswith("unknown"):
+            return first_ip
+    
+    # Fallback to direct connection IP
+    if request.client:
+        return request.client.host
+    
+    return "unknown"
 
 
 # Authentication for sensitive endpoints
 def verify_refresh_token(authorization: Optional[str] = Header(None)) -> bool:
     """
     Verify refresh token for /api/refresh endpoint.
-    Uses simple token-based auth. In production, use proper JWT or API keys.
+    Uses constant-time comparison to prevent timing attacks.
     """
     refresh_token = os.getenv("REFRESH_API_TOKEN")
     
@@ -159,7 +249,14 @@ def verify_refresh_token(authorization: Optional[str] = Header(None)) -> bool:
         return False
     
     token = authorization.replace("Bearer ", "").strip()
-    return token == refresh_token
+    
+    # Use constant-time comparison to prevent timing attacks
+    # This ensures the comparison takes the same time regardless of where the mismatch occurs
+    if len(token) != len(refresh_token):
+        return False
+    
+    # Use hmac.compare_digest for constant-time comparison
+    return hmac.compare_digest(token.encode('utf-8'), refresh_token.encode('utf-8'))
 
 
 @app.on_event("startup")
@@ -191,10 +288,10 @@ async def root():
 @app.get("/api/tracks", response_model=List[TrackResponse])
 async def get_tracks(
     request: Request,
-    platform: Optional[str] = Query(None, max_length=50),
-    format: Optional[str] = Query(None, max_length=50),
-    limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0, le=10000),
+    platform: Optional[str] = Query(None, max_length=50, description="Filter by platform"),
+    format: Optional[str] = Query(None, max_length=50, description="Filter by audio format"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of tracks to return"),
+    offset: int = Query(0, ge=0, le=10000, description="Number of tracks to skip"),
     db: Session = Depends(get_db)
 ):
     """
@@ -219,7 +316,9 @@ async def get_tracks(
     valid_platforms = ["Apple Music"]
     valid_formats = ["Dolby Atmos"]
     
-    query = db.query(Track)
+    query = db.query(Track).options(
+        joinedload(Track.credits).joinedload(TrackCredit.engineer)
+    )
     
     if platform:
         if platform not in valid_platforms:
@@ -261,14 +360,19 @@ async def get_new_tracks(
     
     try:
         cutoff_date = datetime.now() - timedelta(days=days)
-        tracks = db.query(Track).filter(
+        tracks = db.query(Track).options(
+            joinedload(Track.credits).joinedload(TrackCredit.engineer)
+        ).filter(
             Track.release_date >= cutoff_date
         ).order_by(Track.release_date.desc()).all()
         
         return tracks
     except Exception as e:
-        logger.error(f"Error fetching new tracks: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error while fetching tracks")
+        logger.error(f"Error fetching new tracks: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error while fetching tracks. Please try again later."
+        )
 
 
 @app.get("/api/tracks/{track_id}", response_model=TrackResponse)
@@ -297,15 +401,20 @@ async def get_track(
         raise HTTPException(status_code=400, detail="Track ID must be a positive integer")
     
     try:
-        track = db.query(Track).filter(Track.id == track_id).first()
+        track = db.query(Track).options(
+            joinedload(Track.credits).joinedload(TrackCredit.engineer)
+        ).filter(Track.id == track_id).first()
         if not track:
             raise HTTPException(status_code=404, detail="Track not found")
         return track
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching track {track_id}: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error while fetching track")
+        logger.error(f"Error fetching track {track_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error while fetching track. Please try again later."
+        )
 
 
 @app.post("/api/refresh", response_model=RefreshResponse)
@@ -340,11 +449,18 @@ async def refresh_data(
     
     try:
         result = await trigger_manual_refresh(db)
-        logger.info(f"Manual refresh triggered by {client_ip}")
+        # Log without sensitive information
+        logger.info(f"Manual refresh triggered by IP: {client_ip[:8]}...")
         return result
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error during manual refresh: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error during refresh")
+        # Log full error internally but don't expose details to client
+        logger.error(f"Error during manual refresh: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during refresh. Please try again later."
+        )
 
 
 @app.get("/api/health")
@@ -388,3 +504,107 @@ async def get_stats(request: Request, db: Session = Depends(get_db)):
         },
         "new_tracks_last_30_days": new_tracks
     }
+
+
+# Phase 3: Community & Quality API
+from backend.models import CommunityRating, Engineer, TrackCredit
+from backend.schemas import RatingRequest, RatingResponse, EngineerResponse
+from sqlalchemy import func
+
+@app.post("/api/tracks/{track_id}/rate", response_model=RatingResponse)
+async def rate_track(
+    request: Request,
+    track_id: int,
+    rating: RatingRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Submit a community rating used for "Hall of Shame" or quality score.
+    """
+    client_ip = get_client_ip(request)
+    if not check_rate_limit(client_ip):
+         raise HTTPException(status_code=429, detail="Rate limit exceeded.")
+    
+    # Check if track exists
+    track = db.query(Track).filter(Track.id == track_id).first()
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+        
+    # Create simple IP hash (salt should be secret in prod)
+    ip_hash = hashlib.sha256(f"{client_ip}{secrets.token_hex(4)}".encode()).hexdigest()
+    
+    # Save rating
+    new_rating = CommunityRating(
+        track_id=track_id,
+        immersiveness_score=rating.score,
+        is_fake_atmos=rating.is_fake,
+        user_ip_hash=ip_hash
+    )
+    db.add(new_rating)
+    db.commit()
+    
+    # Calculate new averages
+    # (In high scale, do this async/background, but here inline is fine)
+    avg_score = db.query(func.avg(CommunityRating.immersiveness_score)).filter(CommunityRating.track_id == track_id).scalar()
+    fake_count = db.query(CommunityRating).filter(CommunityRating.track_id == track_id, CommunityRating.is_fake_atmos == True).count()
+    total = db.query(CommunityRating).filter(CommunityRating.track_id == track_id).count()
+    
+    # Update track cache
+    track.avg_immersiveness = float(avg_score) if avg_score else 0.0
+    # Determine hall of shame threshold (e.g., >30% fake reports with >5 votes)
+    if total > 5 and (fake_count / total) > 0.3:
+        track.hall_of_shame = True
+        
+    db.commit()
+    
+    return {
+        "track_id": track_id,
+        "avg_immersiveness": track.avg_immersiveness,
+        "is_fake_atmos_ratio": fake_count / total if total > 0 else 0.0
+    }
+
+
+@app.get("/api/engineers", response_model=List[EngineerResponse])
+async def get_engineers(
+    request: Request,
+    limit: int = 50,
+    min_mixes: int = 1,
+    db: Session = Depends(get_db)
+):
+    """
+    Get list of engineers sorted by mix count.
+    """
+    # Group by engineer and count track credits
+    # This query might need optimization for large datasets
+    results = db.query(
+        Engineer, 
+        func.count(TrackCredit.id).label('count')
+    ).join(TrackCredit).group_by(Engineer.id).having(func.count(TrackCredit.id) >= min_mixes).order_by(func.count(TrackCredit.id).desc()).limit(limit).all()
+    
+    response = []
+    for eng, count in results:
+        resp = EngineerResponse.model_validate(eng)
+        resp.mix_count = count
+        response.append(resp)
+        
+    return response
+
+
+@app.get("/api/engineers/{engineer_id}", response_model=EngineerResponse)
+async def get_engineer_details(
+    request: Request,
+    engineer_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed profile of an engineer.
+    """
+    engineer = db.query(Engineer).filter(Engineer.id == engineer_id).first()
+    if not engineer:
+        raise HTTPException(status_code=404, detail="Engineer not found")
+        
+    mix_count = db.query(TrackCredit).filter(TrackCredit.engineer_id == engineer_id).count()
+    
+    resp = EngineerResponse.model_validate(engineer)
+    resp.mix_count = mix_count
+    return resp

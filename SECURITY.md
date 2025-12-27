@@ -2,6 +2,9 @@
 
 This document outlines security measures implemented in SpatialSelects.com and best practices for deployment.
 
+**Last Updated**: 2025-01-27  
+**Status**: ✅ Hardened - See [SECURITY_REVIEW.md](SECURITY_REVIEW.md) for comprehensive security audit
+
 ## Security Features Implemented
 
 ### 1. CORS Configuration
@@ -19,9 +22,11 @@ All API endpoints validate and sanitize inputs:
 - **Platform/Format**: Whitelist validation (prevents injection)
 
 ### 3. Rate Limiting
-- **Limit**: 100 requests per minute per IP address
-- **Window**: 60 seconds
-- **Storage**: In-memory (for single-instance deployments)
+- **Limit**: 100 requests per minute per IP address (configurable)
+- **Window**: 60 seconds (configurable via `RATE_LIMIT_WINDOW`)
+- **Storage**: In-memory with automatic cleanup (for single-instance deployments)
+- **Memory Protection**: Bounded storage with aggressive cleanup (max 10,000 IPs)
+- **IP Extraction**: Secure IP extraction with proxy support (`TRUST_PROXY` env var)
 - **Note**: For distributed deployments, consider Redis-based rate limiting
 
 ### 4. Authentication
@@ -29,11 +34,15 @@ All API endpoints validate and sanitize inputs:
 - **Token**: Set via `REFRESH_API_TOKEN` environment variable
 - **Usage**: `Authorization: Bearer <token>` header required
 - **Generation**: Use `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- **Security**: Constant-time token comparison (prevents timing attacks)
+- **Implementation**: Uses `hmac.compare_digest()` for secure comparison
 
 ### 5. XSS Protection
 - **Frontend**: All user-generated content is escaped using `escapeHtml()`
 - **URL Validation**: Only `http://` and `https://` URLs allowed
-- **Content Security Policy**: Configured in `index.html`
+- **Content Security Policy**: Configured in `index.html` with `upgrade-insecure-requests`
+- **Security Headers**: X-XSS-Protection header set on all responses
+- **Input Sanitization**: Null bytes and control characters removed from inputs
 
 ### 6. SQL Injection Prevention
 - **ORM**: Uses SQLAlchemy ORM (parameterized queries)
@@ -45,6 +54,25 @@ All API endpoints validate and sanitize inputs:
 - **Example File**: `.env.example` provided (no real secrets)
 - **Gitignore**: `.env` files excluded from version control
 - **Required Variables**: Documented in `.env.example`
+
+### 8. Security Headers
+- **X-Content-Type-Options**: `nosniff` - Prevents MIME type sniffing
+- **X-Frame-Options**: `DENY` - Prevents clickjacking
+- **X-XSS-Protection**: `1; mode=block` - Legacy XSS protection
+- **Referrer-Policy**: `strict-origin-when-cross-origin`
+- **Strict-Transport-Security**: HSTS header (production only)
+- **Content-Security-Policy**: Restricts resource loading (production only)
+- **Server Header**: Removed to prevent information disclosure
+
+### 9. Request Size Limits
+- **Maximum Size**: 1MB per request
+- **Protection**: Prevents DoS via large payloads
+- **Response**: 413 status code for oversized requests
+
+### 10. Error Handling
+- **Client Messages**: Generic error messages (no stack traces)
+- **Server Logging**: Full error details logged server-side only
+- **Information Disclosure**: Prevented through proper exception handling
 
 ## Security Checklist for Production Deployment
 

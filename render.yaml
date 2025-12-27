@@ -31,14 +31,12 @@ services:
     env: static
     buildCommand: ""
     staticPublishPath: .
-    routes:
-      # Proxy /api/* requests to backend service
-      # Note: Update this URL if you change the backend service name
-      - type: rewrite
-        source: /api/*
-        destination: https://spatial-selecta-api.onrender.com/api/*
+    # Note: Static sites can't access env vars at runtime
+    # API URL is auto-detected in app.js based on hostname
 
 databases:
+  # PostgreSQL Database
   - name: spatial-selecta-db
     databaseName: spatial_selecta
     user: spatial_user
+

@@ -1,16 +1,21 @@
 // Configuration
-const API_URL = (() => {
+// Determine API URL based on environment
+let API_URL;
+if (window.location.hostname === 'localhost' && window.location.port === '8080') {
+    // Local development with separate backend
+    API_URL = 'http://localhost:8000/api';
+} else if (window.location.hostname.includes('onrender.com')) {
+    // Render deployment - backend and frontend on different subdomains
+    // Extract backend service name from frontend name
+    // e.g., spatial-selecta-frontend.onrender.com -> spatial-selecta-api.onrender.com
     const hostname = window.location.hostname;
-    const isDevelopment = hostname === 'localhost' && window.location.port === '8080';
-    
-    if (isDevelopment) {
-        return 'http://localhost:8000/api';  // Local development
-    }
-    
-    // Production: API is proxied through the same domain
-    // Frontend on spatialselects.com proxies /api/* to backend
-    return '/api';
-})();
+    const backendName = hostname.replace('-frontend', '-api');
+    API_URL = `https://${backendName}/api`;
+} else {
+    // Production - assume API is on same domain or configured via meta tag
+    const apiMeta = document.querySelector('meta[name="api-url"]');
+    API_URL = apiMeta ? apiMeta.getAttribute('content') : '/api';
+}
 
 // State management
 let allTracks = [];
@@ -82,17 +87,15 @@ async function loadMusicData() {
                 format: track.format,
                 platform: track.platform,
                 releaseDate: track.release_date,
-                atmosReleaseDate: track.atmos_release_date || track.release_date,
-                albumArt: track.album_art || '🎵',
-                musicLink: track.music_link || null
+                albumArt: track.album_art || '🎵'
             })).filter(track => validateTrack(track));
             
             if (allTracks.length === 0) {
                 throw new Error('No valid tracks found in API response');
             }
             
-            // Sort by Atmos release date (newest first) - fallback to releaseDate if not available
-            sortTracksByAtmosDate(allTracks);
+            // Sort by release date (newest first)
+            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from API`);
@@ -129,11 +132,11 @@ async function loadMusicData() {
                 throw new Error('No valid tracks found in data');
             }
             
-            // Sort by Atmos release date (newest first) - fallback to releaseDate if not available
-            sortTracksByAtmosDate(allTracks);
+            // Sort by release date (newest first)
+            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
             
             filteredTracks = [...allTracks];
-            console.log(`Loaded ${allTracks.length} tracks from data.json (fallback)`);
+            console.log(`Loaded ${allTracks.length} tracks from data.json`);
         } catch (fallbackError) {
             console.error('Error loading music data:', fallbackError);
             // Show user-friendly error message
@@ -153,7 +156,7 @@ function validateTrack(track) {
         return false;
     }
     
-    // Required fields (atmosReleaseDate is recommended for new tracks but optional for backwards compatibility)
+    // Required fields
     const requiredFields = ['id', 'title', 'artist', 'album', 'format', 'platform', 'releaseDate'];
     for (const field of requiredFields) {
         if (!(field in track) || track[field] === null || track[field] === undefined) {
@@ -180,26 +183,10 @@ function validateTrack(track) {
         return false;
     }
     
-    // Validate releaseDate is valid
+    // Validate date is valid
     const date = new Date(track.releaseDate);
     if (isNaN(date.getTime())) {
         return false;
-    }
-    
-    // Validate atmosReleaseDate if present
-    if (track.atmosReleaseDate) {
-        if (!dateRegex.test(track.atmosReleaseDate)) {
-            return false;
-        }
-        const atmosDate = new Date(track.atmosReleaseDate);
-        if (isNaN(atmosDate.getTime())) {
-            return false;
-        }
-        // Atmos release date should not be before original release date - reject if invalid
-        if (atmosDate < date) {
-            console.error(`Track ${track.id}: atmosReleaseDate (${track.atmosReleaseDate}) is before releaseDate (${track.releaseDate})`);
-            return false;
-        }
     }
     
     // Validate platform and format values
@@ -225,8 +212,8 @@ function isValidUrl(url) {
     
     try {
         const urlObj = new URL(url);
-        // Only allow HTTPS for Apple Music links (Apple Music doesn't use HTTP)
-        return urlObj.protocol === 'https:';
+        // Only allow http and https protocols
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
     } catch (e) {
         return false;
     }
@@ -243,15 +230,6 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
-}
-
-// Sort tracks by Atmos release date (newest first), fallback to releaseDate
-function sortTracksByAtmosDate(tracks) {
-    return tracks.sort((a, b) => {
-        const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
-        const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
-        return dateB - dateA;
-    });
 }
 
 // Setup event listeners
@@ -360,8 +338,7 @@ function renderTracks() {
 
 // Create a track card HTML
 function createTrackCard(track) {
-    const atmosDate = track.atmosReleaseDate || track.releaseDate;
-    const isNew = isNewRelease(atmosDate);
+    const isNew = isNewRelease(track.releaseDate);
     const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
     const albumArtDisplay = track.albumArt ? `<div class="album-art-display">${track.albumArt}</div>` : '';
     
@@ -375,7 +352,7 @@ function createTrackCard(track) {
                 <p class="track-album">${escapeHtml(track.album)}</p>
                 <div class="card-footer">
                     <span class="platform-badge">${escapeHtml(track.platform)}</span>
-                    <span class="release-date">${formatDate(atmosDate)}</span>
+                    <span class="release-date">${formatDate(track.releaseDate)}</span>
                 </div>
             </div>
         </div>
@@ -567,14 +544,6 @@ function openTrackModal(track) {
     // Build modal content safely with ARIA attributes
     const trackTitle = escapeHtml(track.title);
     const trackArtist = escapeHtml(track.artist);
-    
-    // Format dates - show both original and Atmos release dates if different
-    const originalDate = formatDate(track.releaseDate);
-    const atmosDate = track.atmosReleaseDate ? formatDate(track.atmosReleaseDate) : null;
-    const dateDisplay = atmosDate && atmosDate !== originalDate
-        ? `<span class="modal-date">Original: ${originalDate} | Atmos: ${atmosDate}</span>`
-        : `<span class="modal-date">Released: ${originalDate}</span>`;
-    
     domCache.modalBody.innerHTML = `
         <div class="modal-header">
             ${albumArtDisplay}
@@ -585,7 +554,7 @@ function openTrackModal(track) {
                 <p class="modal-album">${escapeHtml(track.album)}</p>
                 <div class="modal-meta">
                     <span class="modal-platform">${escapeHtml(track.platform)}</span>
-                    ${dateDisplay}
+                    <span class="modal-date">Released ${formatDate(track.releaseDate)}</span>
                 </div>
             </div>
         </div>

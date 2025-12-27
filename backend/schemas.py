@@ -20,7 +20,6 @@ class TrackBase(BaseModel):
 class TrackCreate(TrackBase):
     """Schema for creating a new track."""
     apple_music_id: Optional[str] = None
-    amazon_music_id: Optional[str] = None
     extra_metadata: Optional[str] = None
 
 
@@ -28,7 +27,6 @@ class TrackResponse(TrackBase):
     """Schema for track response."""
     id: int
     apple_music_id: Optional[str] = None
-    amazon_music_id: Optional[str] = None
     discovered_at: datetime
     updated_at: datetime
 

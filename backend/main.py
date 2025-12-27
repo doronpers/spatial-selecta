@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="Spatial Selecta API",
-    description="API for tracking spatial audio releases from Apple Music and Amazon Music",
+    description="API for tracking spatial audio releases from Apple Music",
     version="1.0.0"
 )
 
@@ -177,8 +177,8 @@ async def get_tracks(
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
     
     # Validate platform and format values to prevent injection
-    valid_platforms = ["Apple Music", "Amazon Music"]
-    valid_formats = ["Dolby Atmos", "360 Reality Audio"]
+    valid_platforms = ["Apple Music"]
+    valid_formats = ["Dolby Atmos"]
     
     query = db.query(Track)
     
@@ -324,22 +324,18 @@ async def get_stats(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
     
     total_tracks = db.query(Track).count()
-    apple_music_tracks = db.query(Track).filter(Track.platform == "Apple Music").count()
-    amazon_music_tracks = db.query(Track).filter(Track.platform == "Amazon Music").count()
     dolby_atmos_tracks = db.query(Track).filter(Track.format == "Dolby Atmos").count()
-    
+
     cutoff_date = datetime.now() - timedelta(days=30)
     new_tracks = db.query(Track).filter(Track.release_date >= cutoff_date).count()
-    
+
     return {
         "total_tracks": total_tracks,
         "by_platform": {
-            "Apple Music": apple_music_tracks,
-            "Amazon Music": amazon_music_tracks
+            "Apple Music": total_tracks
         },
         "by_format": {
-            "Dolby Atmos": dolby_atmos_tracks,
-            "360 Reality Audio": total_tracks - dolby_atmos_tracks
+            "Dolby Atmos": dolby_atmos_tracks
         },
         "new_tracks_last_30_days": new_tracks
     }

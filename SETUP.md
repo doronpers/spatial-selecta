@@ -371,7 +371,7 @@ createdb spatial_selecta
 **Backend logs: "No tracks found in playlist"**
 - Verify Apple Music API token has correct permissions
 - Check playlist IDs in `apple_music_client.py` are valid
-- Test API access: `curl -H "Authorization: Bearer YOUR_TOKEN" https://api.music.apple.com/v1/catalog/us/playlists/pl.567c7ad7094d4c6e9b687d5fd058e689`
+- Test API access: `curl -H "Authorization: Bearer YOUR_TOKEN" https://api.music.apple.com/v1/catalog/us/playlists/pl.ba2404fbc4464b8ba2d60399189cf24e`
 
 ### Rate limiting
 
@@ -388,8 +388,8 @@ To monitor additional Apple Music playlists, edit `backend/apple_music_client.py
 
 ```python
 SPATIAL_AUDIO_PLAYLISTS = [
-    "pl.567c7ad7094d4c6e9b687d5fd058e689",  # Made for Spatial Audio
-    "pl.4a3d8e6e5f3f4a6dbe5e3e6c5d5e5e5e",  # Hits in Spatial Audio
+    "pl.ba2404fbc4464b8ba2d60399189cf24e",  # Hits in Spatial Audio
+    "pl.cc74a5aec23942da9cf083c6c4344aee",  # Pop in Spatial Audio
     "pl.your-new-playlist-id",  # Add new playlist ID
 ]
 ```

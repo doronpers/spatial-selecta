@@ -176,8 +176,8 @@ function validateTrack(track) {
     }
     
     // Validate platform and format values
-    const validPlatforms = ['Apple Music', 'Amazon Music'];
-    const validFormats = ['Dolby Atmos', '360 Reality Audio'];
+    const validPlatforms = ['Apple Music'];
+    const validFormats = ['Dolby Atmos'];
     if (!validPlatforms.includes(track.platform) || !validFormats.includes(track.format)) {
         return false;
     }
@@ -232,7 +232,7 @@ function setupEventListeners() {
         domCache.platformFilter.addEventListener('change', (e) => {
             const value = e.target.value;
             // Validate filter value
-            if (value === 'all' || value === 'Apple Music' || value === 'Amazon Music') {
+            if (value === 'all' || value === 'Apple Music') {
                 currentFilters.platform = value;
                 debouncedApplyFilters();
             }
@@ -242,7 +242,7 @@ function setupEventListeners() {
     domCache.formatFilter.addEventListener('change', (e) => {
         const value = e.target.value;
         // Validate filter value
-        if (value === 'all' || value === 'Dolby Atmos' || value === '360 Reality Audio') {
+        if (value === 'all' || value === 'Dolby Atmos') {
             currentFilters.format = value;
             debouncedApplyFilters();
         }

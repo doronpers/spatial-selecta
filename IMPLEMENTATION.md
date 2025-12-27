@@ -235,7 +235,6 @@ The research mentioned Ben Dodson's [Spatial Audio Finder](https://bendodson.com
 - Open source (ours) vs closed (his)
 - REST API provided (ours) vs web-only (his)
 - Configurable scheduler vs fixed
-- Amazon Music placeholder support
 - Frontend included
 
 ## Future Enhancements (Not Implemented)
@@ -245,9 +244,6 @@ These were identified in the research but not included in the initial implementa
 - [ ] WebSocket support for real-time updates
 - [ ] Email notifications for new releases
 - [ ] User authentication and personal libraries
-- [ ] Music Library Tracker integration
-- [ ] Auto-updating Spotify playlists
-- [ ] TIDAL integration
 - [ ] Genre filtering in backend
 - [ ] Artist page views
 - [ ] Advanced search functionality

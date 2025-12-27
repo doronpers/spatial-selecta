@@ -1,4 +1,4 @@
-# Quick Start: Deploy Spatial Selecta to Render.com
+# Quick Start: Deploy SpatialSelects.com to Render.com
 
 **Time Required:** 15-30 minutes (plus DNS propagation time)
 
@@ -69,7 +69,7 @@ Click **Save** (service will redeploy automatically)
 
 **Test:**
 - Visit: https://spatialselects.com ✅
-- Should see your Spatial Selecta website with tracks
+- Should see your SpatialSelects.com website with tracks
 
 ## That's It! 🎉
 

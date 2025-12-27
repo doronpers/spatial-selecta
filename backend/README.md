@@ -2,7 +2,7 @@
 
 ## Architecture
 
-The Spatial Selecta backend is built with the following components:
+The SpatialSelects.com backend is built with the following components:
 
 ### Technology Stack
 - **FastAPI**: Modern Python web framework for building APIs

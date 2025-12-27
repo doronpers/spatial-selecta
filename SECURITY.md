@@ -1,6 +1,6 @@
 # Security Documentation
 
-This document outlines security measures implemented in Spatial Selecta and best practices for deployment.
+This document outlines security measures implemented in SpatialSelects.com and best practices for deployment.
 
 ## Security Features Implemented
 

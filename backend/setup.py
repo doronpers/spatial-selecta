@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup script for Spatial Selecta backend.
+Setup script for SpatialSelects.com backend.
 Initializes the database and optionally imports existing data from data.json.
 """
 import sys
@@ -14,7 +14,7 @@ from backend.scheduler import import_existing_data_json
 
 
 def main():
-    print("Initializing Spatial Selecta database...")
+    print("Initializing SpatialSelects.com database...")
     
     # Initialize database (create tables)
     try:

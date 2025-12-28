@@ -313,8 +313,8 @@ async def get_tracks(
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
     
     # Validate platform and format values to prevent injection
-    valid_platforms = ["Apple Music"]
-    valid_formats = ["Dolby Atmos"]
+    valid_platforms = ["Apple Music", "Amazon Music"]
+    valid_formats = ["Dolby Atmos", "360 Reality Audio"]
     
     query = db.query(Track).options(
         joinedload(Track.credits).joinedload(TrackCredit.engineer)
@@ -330,8 +330,11 @@ async def get_tracks(
             raise HTTPException(status_code=400, detail=f"Invalid format. Must be one of: {', '.join(valid_formats)}")
         query = query.filter(Track.format == format)
     
-    # Order by release date descending (newest first)
-    query = query.order_by(Track.release_date.desc())
+    # Order by Atmos release date descending (newest first), fallback to release_date
+    query = query.order_by(
+        Track.atmos_release_date.desc().nullslast(),
+        Track.release_date.desc()
+    )
     
     tracks = query.offset(offset).limit(limit).all()
     return tracks
@@ -473,6 +476,11 @@ async def health_check():
 
 
 # Public refresh rate limiting - much stricter (1 per hour per IP)
+# NOTE: This is in-memory only and will be lost on server restart.
+# For production with multiple instances or persistent rate limiting,
+# consider using Redis or database-backed storage.
+# This is acceptable for single-instance deployments where occasional
+# rate limit resets on restart are acceptable.
 public_refresh_store = {}
 PUBLIC_REFRESH_COOLDOWN = 3600  # 1 hour in seconds
 
@@ -609,8 +617,10 @@ async def rate_track(
     if not track:
         raise HTTPException(status_code=404, detail="Track not found")
         
-    # Create simple IP hash (salt should be secret in prod)
-    ip_hash = hashlib.sha256(f"{client_ip}{secrets.token_hex(4)}".encode()).hexdigest()
+    # Create simple IP hash with consistent salt from environment
+    # This allows detecting duplicate votes from same IP while maintaining privacy
+    salt = os.getenv("RATING_IP_SALT", "default-salt-change-in-production")
+    ip_hash = hashlib.sha256(f"{client_ip}{salt}".encode()).hexdigest()
     
     # Save rating
     new_rating = CommunityRating(

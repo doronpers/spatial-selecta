@@ -99,20 +99,31 @@ The app maintains the following global state:
 
 **Header Section** (`<header>`):
 
-- Site title: "Spatial Selecta"
+- Site title: "SpatialSelects.com"
 - Tagline: "Latest releases in spatial audio formats"
-- Last updated timestamp (dynamically updated)
+- Last updated timestamp (`#lastUpdated`) - dynamically updated
+
+**Navigation** (`.main-nav`):
+
+- Releases tab (`data-view="releases"`)
+- Engineers tab (`data-view="engineers"`)
+- Hardware Guide tab (`data-view="hardware"`)
 
 **Filters Section** (`.filters`):
 
-- Platform dropdown (`#platformFilter`)
-- Format dropdown (`#formatFilter`)
-- Refresh button (`#refreshButton`)
+- Platform dropdown (`#platformFilter`) - filters by Apple Music/Amazon Music
+- Format dropdown (`#formatFilter`) - filters by Dolby Atmos/360 Reality Audio
+- Refresh button (`#refreshButton`) - reloads data from API
+- Sync button (`#syncButton`) - triggers backend discovery
 
 **Main Content** (`<main>`):
 
-- Music grid container (`#musicGrid`) - dynamically populated
-- Empty state message (`#emptyState`) - shown when no matches
+- Releases view (`#releasesView`) - active by default
+  - Releases section (`#releases`) - dynamically populated with track grid
+- Engineers view (`#engineersView`)
+  - Engineers section (`#engineers`) - displays engineer grid
+- Hardware Guide view (`#hardwareView`)
+  - Hardware section (`#hardware`) - displays hardware guide content
 
 **Footer** (`<footer>`):
 
@@ -122,13 +133,14 @@ The app maintains the following global state:
 
 #### Core Functions
 
-**`loadMusicData()`** (lines 18-32)
+**`loadMusicData()`** (async function)
 
-- **Purpose**: Fetches and loads music data from `data.json`
+- **Purpose**: Fetches and loads music data from API or fallback to `data.json`
 - **Returns**: Promise (resolves when data is loaded)
-- **Side Effects**: Updates `allTracks` and `filteredTracks` arrays
-- **Error Handling**: Sets arrays to empty on failure, logs error to console
-- **Sorting**: Sorts tracks by release date (newest first)
+- **Side Effects**: Updates `allTracks` array, applies filters, triggers render
+- **Error Handling**: Shows error banner on failure, logs to console
+- **Sorting**: Sorts tracks by Atmos release date (newest first), falls back to release date
+- **API Integration**: Includes filter parameters in API request
 
 **`setupEventListeners()`** (lines 35-63)
 

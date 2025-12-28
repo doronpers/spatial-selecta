@@ -115,11 +115,20 @@ class AppleMusicClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.Timeout:
-            logger.error("Apple Music API request timed out")
+            logger.error(f"Apple Music API request timed out: {endpoint}")
+            return None
+        except requests.exceptions.HTTPError as e:
+            # Log status code but not full response (may contain sensitive data)
+            status_code = e.response.status_code if hasattr(e, 'response') else 'unknown'
+            logger.error(f"Apple Music API HTTP error {status_code} for endpoint: {endpoint}")
             return None
         except requests.exceptions.RequestException as e:
             # Don't log full error details that might contain sensitive info
-            logger.error(f"Apple Music API request failed: {type(e).__name__}")
+            logger.error(f"Apple Music API request failed: {type(e).__name__} for endpoint: {endpoint}")
+            return None
+        except Exception as e:
+            # Catch any other unexpected errors
+            logger.error(f"Unexpected error in Apple Music API request: {type(e).__name__} for endpoint: {endpoint}")
             return None
     
     def get_catalog_tracks(self, storefront: str = "us", ids: List[str] = None, 

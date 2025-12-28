@@ -23,7 +23,7 @@ EXPOSE 8000
 
 # Health check - verify HTTP status code is 200
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; r = requests.get('http://localhost:8000/api/health', timeout=5); exit(0 if r.status_code == 200 else 1)"
+    CMD python -c "import httpx; r = httpx.get('http://localhost:8000/api/health', timeout=5); exit(0 if r.status_code == 200 else 1)"
 
 # Run backend
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

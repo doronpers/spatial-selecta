@@ -5,12 +5,13 @@ A website that automatically tracks and displays the latest music releases avail
 ## Features
 
 - **Automated Discovery**: Backend automatically scans for new spatial audio releases every 48 hours
-- **Engineer Index**: Explore top mix engineers and their portfolios
-- **Community Ratings**: Rate immersiveness and flag fake Atmos mixes
-- **Hardware Guide**: Educational resources for optimal listening
-- **Platform Filtering**: Filter by platform (Apple Music, Amazon Music)
-- **Format Filtering**: Filter by audio format (Dolby Atmos, 360 Reality Audio)
+- **Platform Filtering**: Filter by platform (Apple Music, Amazon Music) - implemented
+- **Format Filtering**: Filter by audio format (Dolby Atmos, 360 Reality Audio) - implemented
 - **New Release Badges**: Highlights releases from the last 30 days
+- **Manual Sync**: Trigger on-demand track discovery from Apple Music
+- **Engineer Index**: Explore top mix engineers and their portfolios (view available, data loading implemented)
+- **Community Ratings**: Rate immersiveness and flag fake Atmos mixes (API endpoints available)
+- **Hardware Guide**: Educational resources for optimal listening (view available)
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 - **Minimalist Interface**: Clean, typography-focused design
 
@@ -135,15 +136,17 @@ For detailed instructions on finding correct Apple Music links and Atmos release
 
 ## Backend API
 
-SpatialSelects.com now includes a Python backend that automatically detects and tracks spatial audio releases using the Apple Music API.
+SpatialSelects.com includes a Python backend that automatically detects and tracks spatial audio releases using the Apple Music API.
 
 ### Backend Features
 
 - **Apple Music API Integration**: Automatically detects Dolby Atmos tracks using the `audioVariants` API attribute
 - **Automated Discovery**: Background scheduler runs every 48 hours to find new spatial audio releases
-- **Playlist Monitoring**: Tracks curated Apple playlists like "Made for Spatial Audio"
+- **Comprehensive Discovery**: Scans curated playlists, new music charts, album releases, and search results
 - **REST API**: Provides endpoints for querying spatial audio tracks with filtering
 - **Database Storage**: Persistent storage of track metadata and discovery timestamps
+- **Rate Limiting**: Built-in rate limiting for API protection
+- **Security**: Security headers, input validation, and authentication for sensitive endpoints
 
 ### Backend Setup
 
@@ -179,22 +182,46 @@ uvicorn backend.main:app --reload --port 8000
 
 ### API Endpoints
 
-- `GET /api/tracks` - List all spatial audio tracks (with platform/format filtering)
-- `GET /api/tracks/new` - Get recently released tracks
-- `POST /api/refresh` - Manually trigger data refresh
+**Track Endpoints:**
+- `GET /api/tracks` - List all spatial audio tracks (with platform/format filtering, pagination)
+  - Query parameters: `platform`, `format`, `limit`, `offset`
+- `GET /api/tracks/new` - Get recently released tracks (default: last 30 days)
+  - Query parameters: `days` (1-365)
+- `GET /api/tracks/{track_id}` - Get specific track by ID
+
+**Refresh Endpoints:**
+- `POST /api/refresh` - Manually trigger data refresh (requires authentication token)
+- `POST /api/refresh/sync` - Public endpoint to trigger refresh (rate limited: 1 per hour per IP)
+- `GET /api/refresh/status` - Check if public refresh is available
+
+**Community Endpoints:**
+- `POST /api/tracks/{track_id}/rate` - Submit community rating for a track
+  - Body: `{"score": 1-10, "is_fake": boolean}`
+
+**Engineer Endpoints:**
+- `GET /api/engineers` - List engineers sorted by mix count
+  - Query parameters: `limit`, `min_mixes`
+- `GET /api/engineers/{engineer_id}` - Get engineer details
+
+**Utility Endpoints:**
 - `GET /api/stats` - Get database statistics
+- `GET /api/health` - Health check endpoint
+
+**Authentication:**
+- Protected endpoints require `Authorization: Bearer <token>` header
+- Set `REFRESH_API_TOKEN` environment variable for authentication
 
 ## Future Enhancements
 
-- Apple Music API integration (Done)
-- Amazon Music API integration
+- Amazon Music API integration (currently manual data entry)
 - User accounts and favorites
 - Playlist creation
 - Email notifications for new releases
-- Search functionality
+- Search functionality (frontend search)
 - Genre filtering
 - Artist page views
 - WebSocket support for real-time updates
+- Improved credits scraping (currently basic implementation)
 
 ## License
 

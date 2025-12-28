@@ -62,6 +62,16 @@ def run_migrations():
             conn.commit()
             print("Migration: Added music_link column to tracks table")
 
+    # Add atmos_release_date column if it doesn't exist
+    if 'atmos_release_date' not in existing_columns:
+        with engine.connect() as conn:
+            if 'sqlite' in DATABASE_URL:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN atmos_release_date DATETIME'))
+            else:
+                conn.execute(text('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS atmos_release_date TIMESTAMP'))
+            conn.commit()
+            print("Migration: Added atmos_release_date column to tracks table")
+
     # Phase 1 Migrations
     if 'hall_of_shame' not in existing_columns:
         with engine.connect() as conn:

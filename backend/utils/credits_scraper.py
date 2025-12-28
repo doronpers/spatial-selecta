@@ -8,6 +8,7 @@ import logging
 import time
 import random
 import re
+import json
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -72,59 +73,109 @@ class CreditsScraper:
     def _parse_credits(self, html_content: str) -> List[Dict]:
         """
         Parse HTML content to extract credit information.
+        Uses multiple strategies with fallbacks for robustness.
         """
         credits = []
-        soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Apple Music web structure for credits is often in a specific section
-        # Look for the credits container
-        # Note: parsing logic depends on current Apple Music DOM structure which may change
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+        except Exception as e:
+            logger.error(f"Error parsing HTML content: {e}")
+            return []
         
         # Strategy 1: Look for JSON data embedded in the page (most reliable)
         # Often found in a script tag with ID dealing with "shoebox" or "server-data"
-        # scripts = soup.find_all('script', type='application/json')
-        # for script in scripts:
-        #    # Placeholder for future strict JSON parsing
-        #    pass
-            
-        # Strategy 2: DOM Parsing
+        try:
+            scripts = soup.find_all('script', type='application/json')
+            for script in scripts:
+                try:
+                    data = json.loads(script.string)
+                    # Look for credits in nested JSON structure
+                    # This is a placeholder - actual structure depends on Apple Music's current implementation
+                    if isinstance(data, dict):
+                        # Try common paths for credits data
+                        if 'credits' in data:
+                            credits.extend(self._extract_credits_from_json(data['credits']))
+                except (json.JSONDecodeError, AttributeError):
+                    continue
+        except Exception as e:
+            logger.debug(f"Strategy 1 (JSON parsing) failed: {e}")
+        
+        # Strategy 2: DOM Parsing (fallback)
         # Look for elements with class names related to credits
-        # This is fragile but necessary as fallback
-        
-        # Targeted Roles for Spatial Audio
-        target_roles = [
-            "Immersive Mix Engineer", "Dolby Atmos Mixer", "Surround Mix Engineer", 
-            "Mix Engineer", "Mastering Engineer"
-        ]
-        
-        # Find all text that matches roles
-        # This is a simplified scraper. A real production one would need robust selectors or Playwright.
-        text_content = soup.get_text()
-        
-        # Simple Regex extraction (prototype)
-        # Pattern: Role Name (e.g. "Immersive Mix Engineer: Steven Wilson")
-        for role in target_roles:
-            # Flexible pattern
-            pattern = re.compile(f"{role}\\s*[:|-]?\\s*([A-Z][a-zA-Z0-9\\s\\.]+)", re.IGNORECASE)
-            matches = pattern.findall(text_content)
+        try:
+            # Common selectors for credits sections
+            credit_selectors = [
+                '[class*="credit"]',
+                '[class*="contributor"]',
+                '[data-testid*="credit"]',
+                '.credits',
+                '.contributors'
+            ]
             
-            for name in matches:
-                name = name.strip()
-                if len(name) > 2 and len(name) < 50: # Sanity check
-                    credits.append({
-                        "role": role,
-                        "name": name,
-                        "slug": name.lower().replace(" ", "-") # simplistic slug
-                    })
-                    
-        # Remove duplicates
+            for selector in credit_selectors:
+                elements = soup.select(selector)
+                for elem in elements:
+                    text = elem.get_text(strip=True)
+                    if text:
+                        parsed = self._parse_credit_text(text)
+                        if parsed:
+                            credits.extend(parsed)
+        except Exception as e:
+            logger.debug(f"Strategy 2 (DOM parsing) failed: {e}")
+        
+        # Strategy 3: Regex-based text extraction (last resort)
+        if not credits:
+            try:
+                text_content = soup.get_text()
+                credits = self._extract_credits_from_text(text_content)
+            except Exception as e:
+                logger.debug(f"Strategy 3 (regex extraction) failed: {e}")
+        
+        # Remove duplicates and validate
         unique_credits = []
         seen = set()
         for c in credits:
-            key = f"{c['name']}:{c['role']}"
+            if not isinstance(c, dict) or 'name' not in c or 'role' not in c:
+                continue
+            key = f"{c['name'].lower()}:{c['role'].lower()}"
             if key not in seen:
                 seen.add(key)
-                unique_credits.append(c)
-                
+                # Validate credit data
+                if 2 < len(c['name']) < 100 and len(c['role']) < 100:
+                    unique_credits.append(c)
+        
         return unique_credits
+    
+    def _extract_credits_from_json(self, json_data) -> List[Dict]:
+        """Extract credits from JSON structure."""
+        credits = []
+        # Placeholder for JSON-based extraction
+        # Implementation depends on actual Apple Music JSON structure
+        return credits
+    
+    def _parse_credit_text(self, text: str) -> List[Dict]:
+        """Parse credit information from text content."""
+        credits = []
+        target_roles = [
+            "Immersive Mix Engineer", "Dolby Atmos Mixer", "Surround Mix Engineer", 
+            "Mix Engineer", "Mastering Engineer", "Engineer", "Producer"
+        ]
+        
+        for role in target_roles:
+            pattern = re.compile(f"{re.escape(role)}\\s*[:|-]?\\s*([A-Z][a-zA-Z0-9\\s\\.]+)", re.IGNORECASE)
+            matches = pattern.findall(text)
+            for name in matches:
+                name = name.strip()
+                if 2 < len(name) < 50:
+                    credits.append({
+                        "role": role,
+                        "name": name,
+                        "slug": name.lower().replace(" ", "-").replace(".", "")
+                    })
+        return credits
+    
+    def _extract_credits_from_text(self, text_content: str) -> List[Dict]:
+        """Extract credits using regex patterns on full text."""
+        return self._parse_credit_text(text_content)
 

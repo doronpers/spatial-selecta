@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <!-- Note: 'unsafe-inline' is required for inline scripts/styles in this implementation -->
+  <!-- For production, consider using nonces or moving all scripts/styles to external files -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com https://api.spatialselects.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
 
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>SpatialSelects.com - Latest Spatial Audio Releases</title>

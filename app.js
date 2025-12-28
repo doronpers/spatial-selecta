@@ -82,6 +82,7 @@ async function loadMusicData() {
                 format: track.format,
                 platform: track.platform,
                 releaseDate: track.release_date,
+                atmosReleaseDate: track.atmos_release_date || track.release_date,
                 albumArt: track.album_art || '🎵'
             })).filter(track => validateTrack(track));
             
@@ -151,7 +152,7 @@ function validateTrack(track) {
         return false;
     }
     
-    // Required fields
+    // Required fields (atmosReleaseDate is optional for backwards compatibility)
     const requiredFields = ['id', 'title', 'artist', 'album', 'format', 'platform', 'releaseDate'];
     for (const field of requiredFields) {
         if (!(field in track) || track[field] === null || track[field] === undefined) {
@@ -178,10 +179,25 @@ function validateTrack(track) {
         return false;
     }
     
-    // Validate date is valid
+    // Validate releaseDate is valid
     const date = new Date(track.releaseDate);
     if (isNaN(date.getTime())) {
         return false;
+    }
+    
+    // Validate atmosReleaseDate if present
+    if (track.atmosReleaseDate) {
+        if (!dateRegex.test(track.atmosReleaseDate)) {
+            return false;
+        }
+        const atmosDate = new Date(track.atmosReleaseDate);
+        if (isNaN(atmosDate.getTime())) {
+            return false;
+        }
+        // Atmos release date should not be before original release date
+        if (atmosDate < date) {
+            console.warn(`Track ${track.id}: atmosReleaseDate is before releaseDate`);
+        }
     }
     
     // Validate platform and format values
@@ -333,7 +349,8 @@ function renderTracks() {
 
 // Create a track card HTML
 function createTrackCard(track) {
-    const isNew = isNewRelease(track.releaseDate);
+    const atmosDate = track.atmosReleaseDate || track.releaseDate;
+    const isNew = isNewRelease(atmosDate);
     const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
     const albumArtDisplay = track.albumArt ? `<div class="album-art-display">${track.albumArt}</div>` : '';
     
@@ -347,7 +364,7 @@ function createTrackCard(track) {
                 <p class="track-album">${escapeHtml(track.album)}</p>
                 <div class="card-footer">
                     <span class="platform-badge">${escapeHtml(track.platform)}</span>
-                    <span class="release-date">${formatDate(track.releaseDate)}</span>
+                    <span class="release-date">${formatDate(atmosDate)}</span>
                 </div>
             </div>
         </div>
@@ -539,6 +556,14 @@ function openTrackModal(track) {
     // Build modal content safely with ARIA attributes
     const trackTitle = escapeHtml(track.title);
     const trackArtist = escapeHtml(track.artist);
+    
+    // Format dates - show both original and Atmos release dates if different
+    const originalDate = formatDate(track.releaseDate);
+    const atmosDate = track.atmosReleaseDate ? formatDate(track.atmosReleaseDate) : null;
+    const dateDisplay = atmosDate && atmosDate !== originalDate
+        ? `<span class="modal-date">Original: ${originalDate} | Atmos: ${atmosDate}</span>`
+        : `<span class="modal-date">Released: ${originalDate}</span>`;
+    
     domCache.modalBody.innerHTML = `
         <div class="modal-header">
             ${albumArtDisplay}
@@ -549,7 +574,7 @@ function openTrackModal(track) {
                 <p class="modal-album">${escapeHtml(track.album)}</p>
                 <div class="modal-meta">
                     <span class="modal-platform">${escapeHtml(track.platform)}</span>
-                    <span class="modal-date">Released ${formatDate(track.releaseDate)}</span>
+                    ${dateDisplay}
                 </div>
             </div>
         </div>

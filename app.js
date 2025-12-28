@@ -5,18 +5,25 @@ const API_URL = typeof window !== 'undefined' && window.API_URL ? window.API_URL
 
 // Simple DOM cache to avoid repeated lookups
 const domCache = {
-  engineersGrid: document.getElementById('engineers-grid'),
-  tracksGrid: document.getElementById('tracks-grid'),
-  errorBanner: document.getElementById('error-banner'),
-  loadingSpinner: document.getElementById('loading-spinner'),
+  engineersSection: null, // Will be initialized after DOM ready
+  releasesSection: null, // Will be initialized after DOM ready
+  errorBanner: null, // Will be initialized after DOM ready
+  loadingSpinner: null, // Will be initialized after DOM ready
   refreshButton: null,
   syncButton: null,
-  lastUpdated: null
+  lastUpdated: null,
+  platformFilter: null,
+  formatFilter: null
 };
 
 // In-memory state
 let allEngineers = Array.isArray(window.initialEngineers) ? window.initialEngineers : [];
 let allTracks = Array.isArray(window.initialTracks) ? window.initialTracks : [];
+let filteredTracks = [];
+let currentFilters = {
+  platform: 'all',
+  format: 'all'
+};
 
 /**
  * Basic HTML escaping to prevent XSS when injecting strings.
@@ -78,17 +85,30 @@ function validateTrack(track) {
 }
 
 /**
+ * Validate URL is HTTPS to prevent XSS
+ */
+function isValidHttpsUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Render engineers grid safely with null guards.
  */
 function renderEngineers() {
-  if (!domCache.engineersGrid) return;
+  if (!domCache.engineersSection) return;
 
   if (!Array.isArray(allEngineers) || allEngineers.length === 0) {
-    domCache.engineersGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No engineers found.</p>';
+    domCache.engineersSection.innerHTML = '<div class="engineers-grid"><p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No engineers found.</p></div>';
     return;
   }
 
-  domCache.engineersGrid.innerHTML = allEngineers.map(eng => {
+  const engineersHtml = allEngineers.map(eng => {
     const nameSafe = escapeHtml(eng?.name ?? 'Unknown');
     const imgUrl = typeof eng?.profile_image_url === 'string' ? eng.profile_image_url : null;
     const avatarHtml = imgUrl
@@ -106,24 +126,41 @@ function renderEngineers() {
   <div class="mix-count">${mixCount} Mixes</div>
 </div>`;
   }).join('');
+
+  domCache.engineersSection.innerHTML = `<div class="engineers-grid">${engineersHtml}</div>`;
 }
 
 /**
- * Render tracks grid (basic example; adapt to your UI components).
+ * Apply filters to tracks based on current filter state
+ */
+function applyFilters() {
+  filteredTracks = allTracks.filter(track => {
+    const platformMatch = currentFilters.platform === 'all' || track.platform === currentFilters.platform;
+    const formatMatch = currentFilters.format === 'all' || track.format === currentFilters.format;
+    return platformMatch && formatMatch;
+  });
+  renderTracks();
+}
+
+/**
+ * Render tracks grid with filtering support
  */
 function renderTracks() {
-  if (!domCache.tracksGrid) return;
+  if (!domCache.releasesSection) return;
 
-  if (!Array.isArray(allTracks) || allTracks.length === 0) {
-    domCache.tracksGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No tracks found.</p>';
+  const tracksToRender = filteredTracks.length > 0 ? filteredTracks : allTracks;
+
+  if (!Array.isArray(tracksToRender) || tracksToRender.length === 0) {
+    domCache.releasesSection.innerHTML = '<div class="empty-state"><p>No tracks found.</p></div>';
     return;
   }
 
-  domCache.tracksGrid.innerHTML = allTracks.map(track => {
+  const tracksHtml = tracksToRender.map(track => {
     const titleSafe = escapeHtml(track.title);
     const artistSafe = escapeHtml(track.artist);
     const albumSafe = escapeHtml(track.album ?? '');
     const platformSafe = escapeHtml(track.platform ?? '');
+    const formatSafe = escapeHtml(track.format ?? '');
     const art = escapeHtml(track.albumArt ?? '🎵');
 
     const atmosDate = track.atmosReleaseDate ? new Date(track.atmosReleaseDate) : null;
@@ -132,33 +169,39 @@ function renderTracks() {
     const atmosDateStr = atmosDate && !isNaN(atmosDate.getTime()) ? atmosDate.toISOString().slice(0, 10) : '—';
     const releaseDateStr = releaseDate && !isNaN(releaseDate.getTime()) ? releaseDate.toISOString().slice(0, 10) : '—';
 
-    const link = track.musicLink ? `<a href="${escapeHtml(track.musicLink)}" target="_blank" rel="noopener noreferrer">Listen</a>` : '';
+    // Validate musicLink is HTTPS before rendering
+    const link = track.musicLink && isValidHttpsUrl(track.musicLink)
+      ? `<a href="${escapeHtml(track.musicLink)}" target="_blank" rel="noopener noreferrer" class="music-link-btn">Listen on ${platformSafe}</a>`
+      : '';
 
     const creditsCount = Array.isArray(track.credits) ? track.credits.length : 0;
     const avgImmStr = typeof track.avgImmersiveness === 'number' ? track.avgImmersiveness.toFixed(2) : '—';
-    const shameFlag = track.hallOfShame ? '⚠' : '';
+    const shameFlag = track.hallOfShame ? '<span class="hall-of-shame-badge">⚠ Fake Atmos</span>' : '';
+
+    // Check if new release (within last 30 days)
+    const isNew = atmosDate && !isNaN(atmosDate.getTime()) && 
+      (Date.now() - atmosDate.getTime()) < (30 * 24 * 60 * 60 * 1000);
+    const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
 
     return `
-<div class="track-card">
-  <div class="album-art">${art}</div>
-  <div class="meta">
-    <div class="title">${titleSafe}</div>
-    <div class="artist">${artistSafe}</div>
-    <div class="album">${albumSafe}</div>
-    <div class="platform">${platformSafe}</div>
-    <div class="dates">
-      <span>Atmos: ${atmosDateStr}</span>
-      <span>Release: ${releaseDateStr}</span>
+<div class="music-card">
+  <div class="album-art-display">${art}</div>
+  <div class="format-badge">${formatSafe}</div>
+  <div class="card-content">
+    <div class="track-title">${titleSafe}${newBadge}</div>
+    <div class="track-artist">${artistSafe}</div>
+    <div class="track-album">${albumSafe}</div>
+    <div class="card-footer">
+      <span class="platform-badge">${platformSafe}</span>
+      <span class="release-date">${atmosDateStr}</span>
     </div>
-    <div class="extras">
-      <span>Credits: ${creditsCount}</span>
-      <span>Immersiveness: ${avgImmStr}</span>
-      <span>${shameFlag}</span>
-    </div>
-    <div class="actions">${link}</div>
+    ${link ? `<div style="margin-top: 1rem;">${link}</div>` : ''}
+    ${shameFlag ? `<div style="margin-top: 0.5rem;">${shameFlag}</div>` : ''}
   </div>
 </div>`;
   }).join('');
+
+  domCache.releasesSection.innerHTML = `<div class="music-grid">${tracksHtml}</div>`;
 }
 
 /**
@@ -170,8 +213,18 @@ async function loadMusicData() {
     // Optional: show loading indicator
     if (domCache.loadingSpinner) domCache.loadingSpinner.style.display = 'block';
 
+    // Build API URL with filter parameters
+    const params = new URLSearchParams();
+    params.append('limit', '100');
+    if (currentFilters.platform !== 'all') {
+      params.append('platform', currentFilters.platform);
+    }
+    if (currentFilters.format !== 'all') {
+      params.append('format', currentFilters.format);
+    }
+
     // Try to load from backend API first
-    const response = await fetch(`${API_URL}/tracks?limit=100`, {
+    const response = await fetch(`${API_URL}/api/tracks?${params.toString()}`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
       credentials: 'omit'
@@ -221,12 +274,12 @@ async function loadMusicData() {
         return timeB - timeA; // newest first
       });
     } else {
-      // Fallback to local JSON (if bundled). Adjust path as needed.
-      const fallbackResp = await fetch('/data/tracks.json', {
+      // Fallback to local JSON file
+      const fallbackResp = await fetch('/data.json', {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
-      if (!fallbackResp.ok) throw new Error('Failed to load fallback tracks.json');
+      if (!fallbackResp.ok) throw new Error('Failed to load fallback data.json');
       const jsonTracks = await fallbackResp.json();
       if (!Array.isArray(jsonTracks)) throw new Error('Invalid fallback format: expected array');
 
@@ -263,8 +316,8 @@ async function loadMusicData() {
     }
   } finally {
     if (domCache.loadingSpinner) domCache.loadingSpinner.style.display = 'none';
-    // Re-render UI
-    renderTracks();
+    // Apply filters and re-render UI
+    applyFilters();
   }
 }
 
@@ -418,12 +471,88 @@ function updateLastUpdated() {
 }
 
 /**
+ * Setup filter event listeners
+ */
+function setupFilters() {
+  if (domCache.platformFilter) {
+    domCache.platformFilter.addEventListener('change', (e) => {
+      currentFilters.platform = e.target.value;
+      loadMusicData();
+    });
+  }
+
+  if (domCache.formatFilter) {
+    domCache.formatFilter.addEventListener('change', (e) => {
+      currentFilters.format = e.target.value;
+      loadMusicData();
+    });
+  }
+}
+
+/**
+ * Setup view switching for navigation tabs
+ */
+function setupViewSwitching() {
+  const navLinks = document.querySelectorAll('.nav-tabs a[data-view]');
+  const viewSections = document.querySelectorAll('.view-section');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const viewName = link.getAttribute('data-view');
+
+      // Update active nav link
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+
+      // Update active view section
+      viewSections.forEach(section => section.classList.remove('active'));
+      const targetSection = document.getElementById(`${viewName}View`);
+      if (targetSection) {
+        targetSection.classList.add('active');
+      }
+
+      // Load data for specific views if needed
+      if (viewName === 'engineers') {
+        loadEngineers();
+      }
+    });
+  });
+}
+
+/**
+ * Load engineers data from API
+ */
+async function loadEngineers() {
+  try {
+    const response = await fetch(`${API_URL}/api/engineers?limit=50`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'omit'
+    });
+
+    if (response.ok) {
+      allEngineers = await response.json();
+      renderEngineers();
+    }
+  } catch (err) {
+    console.error('loadEngineers error:', err);
+  }
+}
+
+/**
  * Initialize DOM cache elements that need to be queried after DOM is ready
  */
 function initializeDOMCache() {
   domCache.refreshButton = document.getElementById('refreshButton');
   domCache.syncButton = document.getElementById('syncButton');
   domCache.lastUpdated = document.getElementById('lastUpdated');
+  domCache.platformFilter = document.getElementById('platformFilter');
+  domCache.formatFilter = document.getElementById('formatFilter');
+  domCache.releasesSection = document.getElementById('releases');
+  domCache.engineersSection = document.getElementById('engineers');
+  domCache.errorBanner = document.getElementById('error-banner');
+  domCache.loadingSpinner = document.getElementById('loading-spinner');
 }
 
 /**
@@ -431,11 +560,11 @@ function initializeDOMCache() {
  */
 document.addEventListener('DOMContentLoaded', () => {
   initializeDOMCache();
-  renderEngineers();
-  renderTracks();
-  loadMusicData();
+  setupViewSwitching();
+  setupFilters();
   setupRefreshButton();
   setupSyncButton();
+  loadMusicData();
   updateLastUpdated();
 });
 

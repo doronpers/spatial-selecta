@@ -35,12 +35,16 @@
   <main class="container">
     <!-- Releases View -->
     <div id="releasesView" class="view-section active">
+      <div id="error-banner" style="display: none; background: #c62828; color: white; padding: 1rem; margin-bottom: 1rem; text-align: center;"></div>
+      <div id="loading-spinner" style="display: none; text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</div>
+
       <section class="filters">
         <div class="filter-group">
           <label for="platformFilter">Platform:</label>
           <select id="platformFilter">
             <option value="all">All Platforms</option>
             <option value="Apple Music">Apple Music</option>
+            <option value="Amazon Music">Amazon Music</option>
           </select>
         </div>
 
@@ -49,6 +53,7 @@
           <select id="formatFilter">
             <option value="all">All Formats</option>
             <option value="Dolby Atmos">Dolby Atmos</option>
+            <option value="360 Reality Audio">360 Reality Audio</option>
           </select>
         </div>
 

@@ -103,6 +103,40 @@ function setupNavigation() {
     });
 }
 
+// Load engineer data from API
+async function loadEngineersData() {
+    try {
+        const response = await fetch(`${API_URL}/engineers?limit=50`);
+        if (response.ok) {
+            allEngineers = await response.json();
+            console.log(`Loaded ${allEngineers.length} engineers`);
+        }
+    } catch (error) {
+        console.warn('Failed to load engineers:', error);
+        allEngineers = [];
+    }
+}
+
+// Render engineers grid
+function renderEngineers() {
+    if (!domCache.engineersGrid) return;
+
+    if (allEngineers.length === 0) {
+        domCache.engineersGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No engineers found.</p>';
+        return;
+    }
+
+    domCache.engineersGrid.innerHTML = allEngineers.map(eng => `
+        <div class="engineer-card">
+            <div class="engineer-avatar">
+                ${eng.profile_image_url ? `<img src="${eng.profile_image_url}" alt="${eng.name}">` : eng.name.charAt(0)}
+            </div>
+            <div class="engineer-name">${escapeHtml(eng.name)}</div>
+            <div class="mix-count">${eng.mix_count} Mixes</div>
+        </div>
+    `).join('');
+}
+
 // Load music data from API or fallback to JSON file
 async function loadMusicData() {
     try {
@@ -126,7 +160,10 @@ async function loadMusicData() {
                 format: track.format,
                 platform: track.platform,
                 releaseDate: track.release_date,
-                albumArt: track.album_art || '🎵'
+                albumArt: track.album_art || '🎵',
+                credits: track.credits || [],
+                avgImmersiveness: track.avg_immersiveness,
+                hallOfShame: track.hall_of_shame
             })).filter(track => validateTrack(track));
 
             if (allTracks.length === 0) {
@@ -580,7 +617,49 @@ function openTrackModal(track) {
 
     const albumArtDisplay = track.albumArt ? `<div class="modal-album-art">${escapeHtml(track.albumArt)}</div>` : '';
 
-    // Build modal content safely with ARIA attributes
+    // Credits Section
+    let creditsHtml = '';
+    if (track.credits && track.credits.length > 0) {
+        creditsHtml = `
+            <div class="modal-section">
+                <h3 class="modal-section-title">Credits</h3>
+                <div class="credits-list">
+                    ${track.credits.map(credit => `
+                        <div class="credit-item">
+                            <span class="credit-role">${escapeHtml(credit.role)}:</span>
+                            <span class="credit-name">${escapeHtml(credit.engineer_name)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Community Rating Section
+    let ratingHtml = `
+        <div class="modal-section">
+            <h3 class="modal-section-title">Community Quality</h3>
+            <div class="rating-display">
+                <div class="immersiveness-score">
+                    <span class="score-label">Immersiveness:</span>
+                    <span class="score-value">${track.avgImmersiveness ? track.avgImmersiveness.toFixed(1) : 'N/A'}/10</span>
+                </div>
+                ${track.hallOfShame ? '<div class="hall-of-shame-badge">⚠️ Hall of Shame (Fake Atmos Reported)</div>' : ''}
+            </div>
+            <div class="rating-controls">
+                <p>Rate this mix:</p>
+                <div class="star-rating" data-track-id="${track.id}">
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="star-btn" data-rating="${n}" title="${n}/10">★</button>`).join('')}
+                </div>
+                <label class="fake-atmos-check">
+                    <input type="checkbox" id="fakeAtmosCheck"> Report as Fake Atmos
+                </label>
+                <button onclick="submitRating(${track.id})" class="submit-rating-btn">Submit Rating</button>
+            </div>
+        </div>
+    `;
+
+    // Build modal content
     const trackTitle = escapeHtml(track.title);
     const trackArtist = escapeHtml(track.artist);
     domCache.modalBody.innerHTML = `
@@ -599,6 +678,8 @@ function openTrackModal(track) {
         </div>
         <div id="modalDescription" class="modal-content-body">
             ${musicLinkHtml}
+            ${creditsHtml}
+            ${ratingHtml}
             ${track.review ? `<div class="modal-section">
                 <h3 class="modal-section-title">Review</h3>
                 <p class="modal-text">${escapeHtml(track.review)}</p>
@@ -617,12 +698,60 @@ function openTrackModal(track) {
     domCache.trackModal.style.display = 'block';
     document.body.style.overflow = 'hidden';
 
+    // Add event listeners for rating
+    const starBtns = domCache.modalBody.querySelectorAll('.star-btn');
+    starBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const rating = parseInt(e.target.dataset.rating);
+            starBtns.forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.rating) <= rating);
+            });
+            domCache.modalBody.setAttribute('data-selected-rating', rating);
+        });
+    });
+
     // Focus management for accessibility
     const firstFocusable = domCache.modalBody.querySelector('a, button');
     if (firstFocusable) {
         firstFocusable.focus();
     }
 }
+
+// Submit rating
+window.submitRating = async function (trackId) {
+    const rating = domCache.modalBody.getAttribute('data-selected-rating');
+    const isFake = document.getElementById('fakeAtmosCheck').checked;
+
+    if (!rating && !isFake) {
+        alert('Please select a rating score or report as fake.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/tracks/${trackId}/rate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                score: rating ? parseInt(rating) : 0,
+                is_fake: isFake
+            })
+        });
+
+        if (response.ok) {
+            alert('Rating submitted! Thank you.');
+            // Ideally refresh the track data here to show new average
+            const data = await response.json();
+            // Update local state if needed
+        } else {
+            alert('Failed to submit rating. You may have been rate limited.');
+        }
+    } catch (e) {
+        console.error('Error submitting rating:', e);
+        alert('Error submitting rating.');
+    }
+};
 
 function closeTrackModal() {
     if (!domCache.trackModal) {

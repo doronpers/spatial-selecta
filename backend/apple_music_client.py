@@ -300,6 +300,19 @@ class AppleMusicClient:
             if url_template:
                 artwork_url = url_template.replace("{w}", "300").replace("{h}", "300")
         
+        # Get the music URL from the API (this is the direct Apple Music link)
+        music_link = attributes.get("url")
+        
+        # Parse release dates
+        release_date = self._parse_release_date(attributes.get("releaseDate"))
+        
+        # For atmos_release_date, use the release date if the track has Atmos
+        # NOTE: This assumes tracks are released with Atmos from day one.
+        # For catalog releases where Atmos was added later, this will be inaccurate.
+        # Future enhancement: Track when Atmos was specifically added vs original release.
+        # For now, manual correction in data.json is recommended for older catalog releases.
+        atmos_release_date = release_date if spatial_info["has_dolby_atmos"] else None
+        
         return {
             "apple_music_id": track_data.get("id"),
             "title": attributes.get("name", "Unknown"),
@@ -307,9 +320,10 @@ class AppleMusicClient:
             "album": attributes.get("albumName", "Unknown"),
             "format": "Dolby Atmos" if spatial_info["has_dolby_atmos"] else "Spatial Audio",
             "platform": "Apple Music",
-            "release_date": self._parse_release_date(attributes.get("releaseDate")),
+            "release_date": release_date,
+            "atmos_release_date": atmos_release_date,
             "album_art": self._get_album_art_emoji(attributes.get("genreNames", [])),
-            "music_link": attributes.get("url"),
+            "music_link": music_link,
             "metadata": {
                 "genre": attributes.get("genreNames", []),
                 "duration_ms": attributes.get("durationInMillis"),

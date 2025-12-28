@@ -88,6 +88,8 @@ spatialselects/
 
 ## Adding New Releases
 
+**IMPORTANT**: All new tracks must follow the standardized format documented in [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md).
+
 To add new spatial audio releases, edit the `data.json` file with the following structure:
 
 ```json
@@ -98,10 +100,20 @@ To add new spatial audio releases, edit the `data.json` file with the following 
   "album": "Album Name",
   "format": "Dolby Atmos",
   "platform": "Apple Music",
-  "releaseDate": "2024-12-23",
-  "albumArt": "🎵"
+  "releaseDate": "2023-01-15",
+  "atmosReleaseDate": "2023-01-15",
+  "albumArt": "🎵",
+  "musicLink": "https://music.apple.com/us/song/song-name/TRACK_ID"
 }
 ```
+
+**Key Requirements**:
+- `musicLink` must be a valid Apple Music URL with correct IDs (see [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md))
+- `releaseDate` is the original song release date
+- `atmosReleaseDate` is when the Dolby Atmos mix became available
+- Both dates must be in YYYY-MM-DD format
+
+For detailed instructions on finding correct Apple Music links and Atmos release dates, see [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md).
 
 ### Supported Formats
 - Dolby Atmos

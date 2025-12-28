@@ -18,7 +18,8 @@ class Track(Base):
     album = Column(String(500), nullable=False)
     format = Column(String(100), nullable=False, index=True)  # Dolby Atmos
     platform = Column(String(100), nullable=False, index=True)  # Apple Music
-    release_date = Column(DateTime, nullable=False, index=True)
+    release_date = Column(DateTime, nullable=False, index=True)  # Original song release date
+    atmos_release_date = Column(DateTime, nullable=True, index=True)  # When Atmos mix was released
     album_art = Column(String(10), nullable=True)  # Emoji or URL
     apple_music_id = Column(String(200), nullable=True, unique=True)  # Apple Music track ID
     discovered_at = Column(DateTime, default=lambda: datetime.now())  # When we first detected this track

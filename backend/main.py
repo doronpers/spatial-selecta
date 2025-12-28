@@ -331,9 +331,11 @@ async def get_tracks(
         query = query.filter(Track.format == format)
     
     # Order by Atmos release date descending (newest first), fallback to release_date
+    # Use nullslast() to put tracks without atmos_release_date at the end
+    from sqlalchemy import desc, nullslast
     query = query.order_by(
-        Track.atmos_release_date.desc().nullslast(),
-        Track.release_date.desc()
+        nullslast(desc(Track.atmos_release_date)),
+        desc(Track.release_date)
     )
     
     tracks = query.offset(offset).limit(limit).all()

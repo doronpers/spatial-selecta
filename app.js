@@ -373,7 +373,7 @@ function setupSyncButton() {
     domCache.syncButton.classList.remove('success', 'error');
 
     try {
-      const response = await fetch(`${API_URL}/refresh/sync`, {
+      const response = await fetch(`${API_URL}/api/refresh/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -435,7 +435,7 @@ async function checkSyncStatus() {
   if (!domCache.syncButton) return;
 
   try {
-    const response = await fetch(`${API_URL}/refresh/status`);
+    const response = await fetch(`${API_URL}/api/refresh/status`);
     if (response.ok) {
       const status = await response.json();
       if (!status.can_refresh) {

@@ -142,58 +142,71 @@ The app maintains the following global state:
 - **Sorting**: Sorts tracks by Atmos release date (newest first), falls back to release date
 - **API Integration**: Includes filter parameters in API request
 
-**`setupEventListeners()`** (lines 35-63)
+**`setupFilters()`** (function)
 
-- **Purpose**: Attaches event handlers to filter controls and refresh button
+- **Purpose**: Attaches event handlers to filter dropdowns
 - **Events**:
-  - Platform filter change → updates `currentFilters.platform` → calls `applyFilters()`
-  - Format filter change → updates `currentFilters.format` → calls `applyFilters()`
+  - Platform filter change → updates `currentFilters.platform` → calls `loadMusicData()`
+  - Format filter change → updates `currentFilters.format` → calls `loadMusicData()`
+
+**`setupRefreshButton()`** (function)
+
+- **Purpose**: Attaches event handler to refresh button
+- **Events**:
   - Refresh button click → reloads data → updates UI → resets button state
 
-**`applyFilters()`** (lines 66-74)
+**`setupSyncButton()`** (function)
+
+- **Purpose**: Attaches event handler to sync button and checks sync status
+- **Events**:
+  - Sync button click → triggers backend discovery → shows result → reloads data
+
+**`applyFilters()`** (function)
 
 - **Purpose**: Filters `allTracks` based on current filter criteria
 - **Logic**:
   - Platform match: `currentFilters.platform === 'all'` OR `track.platform === currentFilters.platform`
   - Format match: `currentFilters.format === 'all'` OR `track.format === currentFilters.format`
 - **Side Effects**: Updates `filteredTracks`, calls `renderTracks()`
+- **Note**: Filters are also applied server-side via API parameters for efficiency
 
-**`renderTracks()`** (lines 77-91)
+**`renderTracks()`** (function)
 
 - **Purpose**: Renders filtered tracks to the DOM
 - **Logic**:
-  - If no tracks: hides grid, shows empty state
-  - If tracks exist: shows grid, hides empty state, populates grid with track cards
-- **DOM Manipulation**: Sets `innerHTML` of `#musicGrid`
+  - If no tracks: shows empty state message
+  - If tracks exist: populates grid with track cards
+- **DOM Manipulation**: Sets `innerHTML` of `#releases` section
+- **Security**: Validates HTTPS URLs before rendering music links
 
-**`createTrackCard(track)`** (lines 94-112)
+**Track Card Rendering** (within `renderTracks()`)
 
-- **Purpose**: Generates HTML string for a single track card
-- **Parameters**: `track` - track object from data
-- **Returns**: HTML string
+- **Purpose**: Generates HTML for track cards
 - **Features**:
+  - Album art emoji display
   - Format badge (Dolby Atmos/360 Reality Audio)
-  - Track title with optional "New" badge
-  - Artist name
-  - Album name
-  - Footer with platform badge and release date
-- **Security**: Uses `escapeHtml()` to prevent XSS
+  - Track title with "New" badge (if within 30 days)
+  - Artist and album names
+  - Platform badge and release date
+  - Music link button (HTTPS validated)
+  - Hall of Shame badge (if flagged)
+- **Security**: Uses `escapeHtml()` for all text, validates URLs with `isValidHttpsUrl()`
 
 #### Utility Functions
 
-**`isNewRelease(dateString)`** (lines 115-121)
+**`isValidHttpsUrl(url)`** (function)
 
-- **Purpose**: Determines if a release is within the last 30 days
-- **Parameters**: `dateString` - ISO date string (YYYY-MM-DD)
+- **Purpose**: Validates that a URL is HTTPS to prevent XSS
+- **Parameters**: `url` - URL string to validate
 - **Returns**: Boolean
-- **Logic**: Calculates days difference, returns true if 0-30 days
+- **Logic**: Parses URL and checks protocol is 'https:'
 
-**`formatDate(dateString)`** (lines 124-128)
+**`isValidDateFormat(dateStr)`** (function)
 
-- **Purpose**: Formats ISO date to human-readable string
-- **Parameters**: `dateString` - ISO date string
-- **Returns**: Formatted string (e.g., "Dec 23, 2025")
-- **Format**: "Month Day, Year" (e.g., "Dec 23, 2025")
+- **Purpose**: Validates date string is in YYYY-MM-DD format
+- **Parameters**: `dateStr` - Date string to validate
+- **Returns**: Boolean
+- **Logic**: Checks format and validates date components using UTC methods
 
 **`updateLastUpdated()`** (lines 131-143)
 
@@ -208,15 +221,20 @@ The app maintains the following global state:
 - **Returns**: Escaped HTML string
 - **Method**: Uses DOM text node to safely escape
 
-**`scheduleWeeklyRefresh()`** (lines 153-179)
+**`setupViewSwitching()`** (function)
 
-- **Purpose**: Schedules automatic data refresh every Friday at 3 PM ET
-- **Implementation**: Uses `setInterval` to check every minute
+- **Purpose**: Implements navigation tab switching between views
+- **Implementation**: Attaches click handlers to nav links
 - **Logic**:
-  - Converts current time to ET timezone
-  - Checks if it's Friday (day 5) and 3 PM (hour 15)
-  - If match, reloads data and updates UI
-- **Note**: This is inefficient and only works when page is open. Should be moved to server-side cron job.
+  - Updates active nav link styling
+  - Shows/hides view sections based on `data-view` attribute
+  - Loads data for specific views (e.g., engineers) when needed
+
+**`loadEngineers()`** (async function)
+
+- **Purpose**: Loads engineer data from API
+- **Returns**: Promise
+- **Side Effects**: Updates `allEngineers` and calls `renderEngineers()`
 
 ### `styles.css` Organization
 

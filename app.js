@@ -31,21 +31,48 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Date format pattern for YYYY-MM-DD validation
+const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Validate that a date string is in YYYY-MM-DD format and represents a valid date.
+ * @param {string} dateStr - The date string to validate
+ * @returns {boolean} - True if valid or null/undefined, false otherwise
+ */
+function isValidDateFormat(dateStr) {
+  // null/undefined is valid (optional field), but empty string is not
+  if (dateStr == null) return true;
+  if (dateStr === '') return false;
+  
+  // Check format: YYYY-MM-DD
+  if (!DATE_FORMAT_REGEX.test(dateStr)) return false;
+  
+  // Parse components and create UTC date for timezone-consistent validation
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  
+  if (isNaN(date.getTime())) return false;
+  
+  // Verify the date components match using UTC methods
+  // (prevents dates like 2023-02-30 from being auto-adjusted to 2023-03-02)
+  return date.getUTCFullYear() === year &&
+         date.getUTCMonth() === month - 1 &&
+         date.getUTCDate() === day;
+}
+
 /**
  * Validate a track object before rendering/using it.
- * Ensures presence of key fields and that dates are parseable or safely null.
+ * Ensures presence of key fields and that optional date fields, when present,
+ * are in YYYY-MM-DD format and represent valid dates.
  */
 function validateTrack(track) {
   if (!track || typeof track !== 'object') return false;
   if (!track.id) return false;
   if (!track.title || !track.artist) return false;
 
-  // Dates can be missing; if present, ensure they are parseable by Date.
-  const rd = track.releaseDate ? new Date(track.releaseDate) : null;
-  const ad = track.atmosReleaseDate ? new Date(track.atmosReleaseDate) : null;
-
-  const releaseOk = rd === null || !isNaN(rd.getTime());
-  const atmosOk = ad === null || !isNaN(ad.getTime());
+  // Validate date format and validity
+  const releaseOk = isValidDateFormat(track.releaseDate);
+  const atmosOk = isValidDateFormat(track.atmosReleaseDate);
 
   return releaseOk && atmosOk;
 }

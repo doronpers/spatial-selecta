@@ -224,8 +224,8 @@ function isValidUrl(url) {
     
     try {
         const urlObj = new URL(url);
-        // Only allow http and https protocols
-        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+        // Only allow HTTPS for Apple Music links (Apple Music doesn't use HTTP)
+        return urlObj.protocol === 'https:';
     } catch (e) {
         return false;
     }

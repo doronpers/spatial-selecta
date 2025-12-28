@@ -95,15 +95,16 @@ Each track entry in `data.json` must include the following fields:
 ### `musicLink` (required)
 - **Type**: String (URL)
 - **Description**: Direct link to the song on Apple Music
-- **Format**: Must be a valid Apple Music URL
+- **Format**: Must be a valid Apple Music HTTPS URL
 - **Examples**:
   - Album link: `https://music.apple.com/us/album/album-name/ALBUM_ID`
   - Track link: `https://music.apple.com/us/song/song-name/TRACK_ID`
   - Album with track: `https://music.apple.com/us/album/song-name/ALBUM_ID?i=TRACK_ID`
 - **Rules**: 
-  - Must be a valid HTTPS URL
+  - Must be a valid HTTPS URL (HTTP not allowed - Apple Music only uses HTTPS)
   - Must link to the correct song/album on Apple Music
   - Must use actual Apple Music IDs (not fabricated numbers)
+  - Will be validated to prevent security issues
 
 ### `review` (optional)
 - **Type**: String

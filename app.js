@@ -32,6 +32,7 @@ const domCache = {
     platformFilter: null,
     formatFilter: null,
     refreshButton: null,
+    syncButton: null,
     lastUpdated: null,
     trackModal: null,
     modalBody: null,
@@ -58,6 +59,7 @@ function initializeDOMCache() {
     domCache.platformFilter = document.getElementById('platformFilter');
     domCache.formatFilter = document.getElementById('formatFilter');
     domCache.refreshButton = document.getElementById('refreshButton');
+    domCache.syncButton = document.getElementById('syncButton');
     domCache.lastUpdated = document.getElementById('lastUpdated');
     domCache.trackModal = document.getElementById('trackModal');
     domCache.modalBody = document.getElementById('modalBody');
@@ -292,6 +294,113 @@ function setupEventListeners() {
             }, 500);
         }
     });
+
+    // Sync button - triggers backend to fetch new tracks from Apple Music
+    if (domCache.syncButton) {
+        setupSyncButton();
+    }
+}
+
+// Setup sync button functionality
+function setupSyncButton() {
+    let syncInProgress = false;
+
+    // Check sync availability on load
+    checkSyncStatus();
+
+    domCache.syncButton.addEventListener('click', async () => {
+        if (syncInProgress || domCache.syncButton.disabled) {
+            return;
+        }
+
+        syncInProgress = true;
+        const originalText = domCache.syncButton.textContent;
+        domCache.syncButton.textContent = 'Syncing...';
+        domCache.syncButton.disabled = true;
+        domCache.syncButton.classList.add('syncing');
+        domCache.syncButton.classList.remove('success', 'error');
+
+        try {
+            const response = await fetch(`${API_URL}/refresh/sync`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const added = result.tracks_added || 0;
+                const updated = result.tracks_updated || 0;
+
+                domCache.syncButton.textContent = `+${added} new`;
+                domCache.syncButton.classList.remove('syncing');
+                domCache.syncButton.classList.add('success');
+
+                // Reload the track list to show new data
+                await loadMusicData();
+                applyFilters();
+                updateLastUpdated();
+
+                // Reset button after delay
+                setTimeout(() => {
+                    domCache.syncButton.textContent = originalText;
+                    domCache.syncButton.classList.remove('success');
+                    checkSyncStatus();
+                }, 3000);
+            } else if (response.status === 429) {
+                // Rate limited
+                const data = await response.json();
+                domCache.syncButton.textContent = 'Try later';
+                domCache.syncButton.classList.remove('syncing');
+                domCache.syncButton.classList.add('error');
+
+                setTimeout(() => {
+                    domCache.syncButton.textContent = originalText;
+                    domCache.syncButton.classList.remove('error');
+                    checkSyncStatus();
+                }, 3000);
+            } else {
+                throw new Error('Sync failed');
+            }
+        } catch (error) {
+            console.error('Sync failed:', error);
+            domCache.syncButton.textContent = 'Error';
+            domCache.syncButton.classList.remove('syncing');
+            domCache.syncButton.classList.add('error');
+
+            setTimeout(() => {
+                domCache.syncButton.textContent = originalText;
+                domCache.syncButton.classList.remove('error');
+                domCache.syncButton.disabled = false;
+                syncInProgress = false;
+            }, 3000);
+            return;
+        }
+
+        syncInProgress = false;
+    });
+}
+
+// Check if sync is available (rate limit status)
+async function checkSyncStatus() {
+    try {
+        const response = await fetch(`${API_URL}/refresh/status`);
+        if (response.ok) {
+            const status = await response.json();
+            if (!status.can_refresh) {
+                const minutes = Math.ceil(status.seconds_until_available / 60);
+                domCache.syncButton.disabled = true;
+                domCache.syncButton.title = `Sync available in ${minutes} minutes`;
+            } else {
+                domCache.syncButton.disabled = false;
+                domCache.syncButton.title = 'Fetch latest tracks from Apple Music (rate limited to once per hour)';
+            }
+        }
+    } catch (error) {
+        // If status check fails, leave button enabled
+        console.warn('Could not check sync status:', error);
+    }
 }
 
 // Apply filters to tracks

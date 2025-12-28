@@ -356,6 +356,89 @@ async def health_check():
     }
 
 
+# Public refresh rate limiting - much stricter (1 per hour per IP)
+public_refresh_store = {}
+PUBLIC_REFRESH_COOLDOWN = 3600  # 1 hour in seconds
+
+
+def check_public_refresh_limit(client_ip: str) -> tuple[bool, int]:
+    """
+    Check if client can trigger a public refresh.
+
+    Returns:
+        Tuple of (allowed, seconds_remaining)
+    """
+    current_time = time.time()
+
+    if client_ip in public_refresh_store:
+        last_refresh = public_refresh_store[client_ip]
+        elapsed = current_time - last_refresh
+        if elapsed < PUBLIC_REFRESH_COOLDOWN:
+            return False, int(PUBLIC_REFRESH_COOLDOWN - elapsed)
+
+    return True, 0
+
+
+@app.post("/api/refresh/sync", response_model=RefreshResponse)
+async def public_refresh_data(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Public endpoint to trigger a refresh of spatial audio data.
+    Rate limited to once per hour per IP address.
+
+    This allows website visitors to manually trigger a data sync
+    without requiring authentication.
+
+    Returns:
+        Refresh status and statistics
+    """
+    client_ip = get_client_ip(request)
+
+    # Check public refresh rate limit
+    allowed, seconds_remaining = check_public_refresh_limit(client_ip)
+    if not allowed:
+        minutes_remaining = seconds_remaining // 60
+        raise HTTPException(
+            status_code=429,
+            detail=f"Refresh limit reached. Please try again in {minutes_remaining} minutes.",
+            headers={"Retry-After": str(seconds_remaining)}
+        )
+
+    try:
+        # Record this refresh
+        public_refresh_store[client_ip] = time.time()
+
+        result = await trigger_manual_refresh(db)
+        logger.info(f"Public refresh triggered by {client_ip}: {result.tracks_added} added, {result.tracks_updated} updated")
+        return result
+    except Exception as e:
+        # Remove the record if refresh failed so they can retry
+        if client_ip in public_refresh_store:
+            del public_refresh_store[client_ip]
+        logger.error(f"Error during public refresh: {e}")
+        raise HTTPException(status_code=500, detail="Error refreshing data. Please try again later.")
+
+
+@app.get("/api/refresh/status")
+async def get_refresh_status(request: Request):
+    """
+    Check if a public refresh is available for this client.
+
+    Returns:
+        Whether refresh is available and time until next refresh
+    """
+    client_ip = get_client_ip(request)
+    allowed, seconds_remaining = check_public_refresh_limit(client_ip)
+
+    return {
+        "can_refresh": allowed,
+        "seconds_until_available": seconds_remaining,
+        "cooldown_minutes": PUBLIC_REFRESH_COOLDOWN // 60
+    }
+
+
 @app.get("/api/stats")
 async def get_stats(request: Request, db: Session = Depends(get_db)):
     """

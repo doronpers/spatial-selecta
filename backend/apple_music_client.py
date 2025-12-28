@@ -114,8 +114,12 @@ class AppleMusicClient:
             response = requests.get(url, headers=self.headers, params=params, timeout=30)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.Timeout:
+            logger.error("Apple Music API request timed out")
+            return None
         except requests.exceptions.RequestException as e:
-            logger.error(f"Apple Music API request failed: {e}")
+            # Don't log full error details that might contain sensitive info
+            logger.error(f"Apple Music API request failed: {type(e).__name__}")
             return None
     
     def get_catalog_tracks(self, storefront: str = "us", ids: List[str] = None, 
@@ -251,6 +255,8 @@ class AppleMusicClient:
         
         return result
     
+    TARGET_STOREFRONTS = ['us', 'gb', 'jp', 'de']
+
     def discover_spatial_audio_tracks(self, storefront: str = "us", 
                                       max_playlists: int = None) -> List[Dict]:
         """
@@ -271,6 +277,9 @@ class AppleMusicClient:
             playlists_to_scan = playlists_to_scan[:max_playlists]
         
         logger.info(f"Discovering spatial audio tracks from {len(playlists_to_scan)} playlists")
+        
+        # Collection of track IDs to check for regional availability
+        discovered_ids = []
         
         for playlist_id in playlists_to_scan:
             try:
@@ -293,6 +302,7 @@ class AppleMusicClient:
                     if spatial_info["has_spatial_audio"]:
                         track_info = self._extract_track_info(track, spatial_info)
                         discovered_tracks.append(track_info)
+                        discovered_ids.append(track_id)
                         playlist_added += 1
                 
                 logger.info(f"Playlist {playlist_id}: {len(tracks)} tracks, {playlist_added} new spatial audio")
@@ -300,8 +310,68 @@ class AppleMusicClient:
             except Exception as e:
                 logger.error(f"Error processing playlist {playlist_id}: {e}")
         
+        # Perform multi-region check
+        if discovered_ids:
+            logger.info(f"Checking regional availability for {len(discovered_ids)} tracks...")
+            regional_availability = self.check_region_availability(discovered_ids)
+            
+            # Merge regional info back into discovered tracks
+            for track in discovered_tracks:
+                track_id = track.get("apple_music_id")
+                if track_id in regional_availability:
+                    track["region_availability"] = regional_availability[track_id]
+        
         logger.info(f"Discovered {len(discovered_tracks)} unique spatial audio tracks total")
         return discovered_tracks
+
+    def check_region_availability(self, track_ids: List[str]) -> Dict[str, List[Dict]]:
+        """
+        Check availability of tracks across multiple regions.
+        
+        Args:
+            track_ids: List of Apple Music track IDs
+            
+        Returns:
+            Dictionary mapping track_id to list of region availability dicts
+        """
+        availability_map = {tid: [] for tid in track_ids}
+        
+        # Chunk IDs to avoid URL length limits (max ~20-50 IDs per call is safe)
+        chunk_size = 30
+        chunks = [track_ids[i:i + chunk_size] for i in range(0, len(track_ids), chunk_size)]
+        
+        for storefront in self.TARGET_STOREFRONTS:
+            for chunk in chunks:
+                try:
+                    # Fetch tracks for this storefront
+                    tracks = self.get_catalog_tracks(storefront, ids=chunk)
+                    
+                    # Create a set of found IDs for this storefront
+                    found_tracks = {t.get("id"): t for t in tracks}
+                    
+                    # Update availability map
+                    for track_id in chunk:
+                        is_available = track_id in found_tracks
+                        format_info = "Stereo"
+                        
+                        if is_available:
+                            track_data = found_tracks[track_id]
+                            spatial_info = self.check_spatial_audio_support(track_data)
+                            if spatial_info["has_dolby_atmos"]:
+                                format_info = "Dolby Atmos"
+                            elif spatial_info["has_spatial_audio"]:
+                                format_info = "Spatial Audio"
+                                
+                        availability_map[track_id].append({
+                            "storefront": storefront,
+                            "is_available": is_available,
+                            "format": format_info
+                        })
+                        
+                except Exception as e:
+                    logger.error(f"Error checking availability for {storefront}: {e}")
+                    
+        return availability_map
     
     def _extract_track_info(self, track_data: Dict, spatial_info: Dict) -> Dict:
         """

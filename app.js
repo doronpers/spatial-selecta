@@ -20,6 +20,7 @@ if (window.location.hostname === 'localhost' && window.location.port === '8080')
 // State management
 let allTracks = [];
 let filteredTracks = [];
+let allEngineers = [];
 let currentFilters = {
     platform: 'all',
     format: 'all'
@@ -27,7 +28,10 @@ let currentFilters = {
 
 // Cached DOM elements
 const domCache = {
+    navTabs: null,
+    viewSections: null,
     musicGrid: null,
+    engineersGrid: null,
     emptyState: null,
     platformFilter: null,
     formatFilter: null,
@@ -45,16 +49,24 @@ let currentModalTrackId = null;
 // Initialize the app
 document.addEventListener('DOMContentLoaded', async () => {
     initializeDOMCache();
-    await loadMusicData();
+    setupNavigation();
+    await Promise.all([
+        loadMusicData(),
+        loadEngineersData()
+    ]);
     setupEventListeners();
     setupModalListeners();
     renderTracks();
+    renderEngineers();
     updateLastUpdated();
 });
 
 // Cache DOM elements for performance
 function initializeDOMCache() {
+    domCache.navTabs = document.querySelectorAll('.nav-tabs a');
+    domCache.viewSections = document.querySelectorAll('.view-section');
     domCache.musicGrid = document.getElementById('musicGrid');
+    domCache.engineersGrid = document.getElementById('engineersGrid');
     domCache.emptyState = document.getElementById('emptyState');
     domCache.platformFilter = document.getElementById('platformFilter');
     domCache.formatFilter = document.getElementById('formatFilter');
@@ -66,20 +78,81 @@ function initializeDOMCache() {
     domCache.modalClose = document.querySelector('.modal-close');
 }
 
+// Setup navigation tabs
+function setupNavigation() {
+    domCache.navTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Update active tab
+            domCache.navTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Show target view
+            const targetId = tab.getAttribute('data-view') + 'View';
+            domCache.viewSections.forEach(section => {
+                section.style.display = 'none';
+                section.classList.remove('active');
+            });
+
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+                // Small timeout to allow display:block to apply before opacity transition if we added one
+                setTimeout(() => targetSection.classList.add('active'), 10);
+            }
+        });
+    });
+}
+
+// Load engineer data from API
+async function loadEngineersData() {
+    try {
+        const response = await fetch(`${API_URL}/engineers?limit=50`);
+        if (response.ok) {
+            allEngineers = await response.json();
+            console.log(`Loaded ${allEngineers.length} engineers`);
+        }
+    } catch (error) {
+        console.warn('Failed to load engineers:', error);
+        allEngineers = [];
+    }
+}
+
+// Render engineers grid
+function renderEngineers() {
+    if (!domCache.engineersGrid) return;
+
+    if (allEngineers.length === 0) {
+        domCache.engineersGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No engineers found.</p>';
+        return;
+    }
+
+    domCache.engineersGrid.innerHTML = allEngineers.map(eng => `
+        <div class="engineer-card">
+            <div class="engineer-avatar">
+                ${eng.profile_image_url ? `<img src="${eng.profile_image_url}" alt="${eng.name}">` : eng.name.charAt(0)}
+            </div>
+            <div class="engineer-name">${escapeHtml(eng.name)}</div>
+            <div class="mix-count">${eng.mix_count} Mixes</div>
+        </div>
+    `).join('');
+}
+
 // Load music data from API or fallback to JSON file
 async function loadMusicData() {
     try {
         // Try to load from backend API first
         const response = await fetch(`${API_URL}/tracks?limit=100`);
-        
+
         if (response.ok) {
             const apiTracks = await response.json();
-            
+
             // Validate and sanitize data
             if (!Array.isArray(apiTracks)) {
                 throw new Error('Invalid data format: expected array');
             }
-            
+
             // Transform API response to match frontend format and validate
             allTracks = apiTracks.map(track => ({
                 id: track.id,
@@ -89,16 +162,19 @@ async function loadMusicData() {
                 format: track.format,
                 platform: track.platform,
                 releaseDate: track.release_date,
-                albumArt: track.album_art || '🎵'
+                albumArt: track.album_art || '🎵',
+                credits: track.credits || [],
+                avgImmersiveness: track.avg_immersiveness,
+                hallOfShame: track.hall_of_shame
             })).filter(track => validateTrack(track));
-            
+
             if (allTracks.length === 0) {
                 throw new Error('No valid tracks found in API response');
             }
-            
+
             // Sort by release date (newest first)
             allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
-            
+
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from API`);
         } else {
@@ -106,7 +182,7 @@ async function loadMusicData() {
         }
     } catch (error) {
         console.warn('Backend API not available, loading from data.json:', error.message);
-        
+
         // Fallback to loading from static JSON file
         try {
             const response = await fetch('data.json', {
@@ -115,28 +191,28 @@ async function loadMusicData() {
                     'Accept': 'application/json'
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
+
             // Validate and sanitize data
             if (!Array.isArray(data)) {
                 throw new Error('Invalid data format: expected array');
             }
-            
+
             // Validate and sanitize each track
             allTracks = data.filter(track => validateTrack(track));
-            
+
             if (allTracks.length === 0) {
                 throw new Error('No valid tracks found in data');
             }
-            
+
             // Sort by release date (newest first)
             allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
-            
+
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from data.json`);
         } catch (fallbackError) {
@@ -157,7 +233,7 @@ function validateTrack(track) {
     if (!track || typeof track !== 'object') {
         return false;
     }
-    
+
     // Required fields
     const requiredFields = ['id', 'title', 'artist', 'album', 'format', 'platform', 'releaseDate'];
     for (const field of requiredFields) {
@@ -165,12 +241,12 @@ function validateTrack(track) {
             return false;
         }
     }
-    
+
     // Validate ID is a number
     if (typeof track.id !== 'number' || track.id <= 0 || !Number.isInteger(track.id)) {
         return false;
     }
-    
+
     // Validate string fields
     const stringFields = ['title', 'artist', 'album', 'format', 'platform'];
     for (const field of stringFields) {
@@ -178,31 +254,31 @@ function validateTrack(track) {
             return false;
         }
     }
-    
+
     // Validate date format (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(track.releaseDate)) {
         return false;
     }
-    
+
     // Validate date is valid
     const date = new Date(track.releaseDate);
     if (isNaN(date.getTime())) {
         return false;
     }
-    
+
     // Validate platform and format values
     const validPlatforms = ['Apple Music'];
     const validFormats = ['Dolby Atmos'];
     if (!validPlatforms.includes(track.platform) || !validFormats.includes(track.format)) {
         return false;
     }
-    
+
     // Validate musicLink if present (must be valid HTTP/HTTPS URL)
     if (track.musicLink && !isValidUrl(track.musicLink)) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -211,7 +287,7 @@ function isValidUrl(url) {
     if (typeof url !== 'string' || url.trim().length === 0) {
         return false;
     }
-    
+
     try {
         const urlObj = new URL(url);
         // Only allow http and https protocols
@@ -270,15 +346,15 @@ function setupEventListeners() {
         if (refreshInProgress) {
             return;
         }
-        
+
         refreshInProgress = true;
         domCache.refreshButton.textContent = 'Refreshing...';
         domCache.refreshButton.disabled = true;
-        
+
         // Note: Backend refresh endpoint requires authentication
         // Frontend refresh button only reloads data, not triggering backend scan
         // To trigger backend refresh, use the API directly with authentication token
-        
+
         // Reload data from current source
         try {
             await loadMusicData();
@@ -410,7 +486,7 @@ function applyFilters() {
         const formatMatch = currentFilters.format === 'all' || track.format === currentFilters.format;
         return platformMatch && formatMatch;
     });
-    
+
     renderTracks();
 }
 
@@ -419,28 +495,28 @@ function renderTracks() {
     if (!domCache.musicGrid || !domCache.emptyState) {
         return;
     }
-    
+
     if (filteredTracks.length === 0) {
         domCache.musicGrid.style.display = 'none';
         domCache.emptyState.style.display = 'block';
         return;
     }
-    
+
     domCache.musicGrid.style.display = 'grid';
     domCache.emptyState.style.display = 'none';
-    
+
     // Use DocumentFragment for better performance
     const fragment = document.createDocumentFragment();
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = filteredTracks.map(track => createTrackCard(track)).join('');
-    
+
     while (tempDiv.firstChild) {
         fragment.appendChild(tempDiv.firstChild);
     }
-    
+
     domCache.musicGrid.innerHTML = '';
     domCache.musicGrid.appendChild(fragment);
-    
+
     // Re-setup event delegation after render
     setupCardClickDelegation();
 }
@@ -450,7 +526,7 @@ function createTrackCard(track) {
     const isNew = isNewRelease(track.releaseDate);
     const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
     const albumArtDisplay = track.albumArt ? `<div class="album-art-display">${track.albumArt}</div>` : '';
-    
+
     return `
         <div class="music-card" data-track-id="${track.id}">
             <div class="card-content">
@@ -489,13 +565,13 @@ function updateLastUpdated() {
     if (!domCache.lastUpdated) {
         return;
     }
-    
+
     const now = new Date();
-    const options = { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
+    const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
         minute: '2-digit',
         hour12: true
     };
@@ -518,12 +594,12 @@ function scheduleWeeklyRefresh() {
         const now = new Date();
         const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
         const etNowTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-        
+
         // Get current ET day and time
         const currentDay = etNowTime.getDay(); // 0 = Sunday, 5 = Friday
         const currentHour = etNowTime.getHours();
         const currentMinute = etNowTime.getMinutes();
-        
+
         // Calculate days until next Friday
         let daysUntilFriday = (5 - currentDay + 7) % 7;
         if (daysUntilFriday === 0 && (currentHour < 15 || (currentHour === 15 && currentMinute === 0))) {
@@ -533,23 +609,23 @@ function scheduleWeeklyRefresh() {
             // It's Friday but after 3 PM, refresh next Friday
             daysUntilFriday = 7;
         }
-        
+
         // Calculate target time: next Friday at 3:00 PM ET
         const targetET = new Date(etNowTime);
         targetET.setDate(targetET.getDate() + daysUntilFriday);
         targetET.setHours(15, 0, 0, 0);
-        
+
         // Convert ET time back to local time for setTimeout
         const etOffset = etNowTime.getTime() - now.getTime();
         const targetLocal = new Date(targetET.getTime() - etOffset);
-        
+
         const msUntilRefresh = targetLocal.getTime() - now.getTime();
         return Math.max(msUntilRefresh, 60000); // Minimum 1 minute
     };
-    
+
     const scheduleNextRefresh = () => {
         const msUntilRefresh = getNextRefreshTime();
-        
+
         setTimeout(async () => {
             // Only refresh if page is visible
             if (!document.hidden) {
@@ -558,22 +634,22 @@ function scheduleWeeklyRefresh() {
                 applyFilters();
                 updateLastUpdated();
             }
-            
+
             // Schedule next refresh (weekly)
             scheduleNextRefresh();
         }, msUntilRefresh);
     };
-    
+
     // Start scheduling
     scheduleNextRefresh();
-    
+
     // Also check when page becomes visible (in case we missed the scheduled time)
     document.addEventListener('visibilitychange', async () => {
         if (!document.hidden) {
             const etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
             const isFriday = etNow.getDay() === 5;
             const is3PM = etNow.getHours() === 15 && etNow.getMinutes() < 5; // 5 minute window
-            
+
             if (isFriday && is3PM) {
                 // Check if we should refresh (avoid multiple refreshes)
                 const lastRefresh = localStorage.getItem('lastAutoRefresh');
@@ -597,10 +673,10 @@ function setupCardClickDelegation() {
     if (!domCache.musicGrid) {
         return;
     }
-    
+
     // Remove existing listener if any (idempotent)
     domCache.musicGrid.removeEventListener('click', handleCardClick);
-    
+
     // Add single delegated listener
     domCache.musicGrid.addEventListener('click', handleCardClick);
 }
@@ -611,17 +687,17 @@ function handleCardClick(e) {
     if (!card) {
         return;
     }
-    
+
     const trackIdAttr = card.getAttribute('data-track-id');
     if (!trackIdAttr) {
         return;
     }
-    
+
     const trackId = parseInt(trackIdAttr, 10);
     if (isNaN(trackId) || trackId <= 0) {
         return;
     }
-    
+
     const track = allTracks.find(t => t.id === trackId);
     if (track) {
         openTrackModal(track);
@@ -632,14 +708,14 @@ function openTrackModal(track) {
     if (!domCache.trackModal || !domCache.modalBody || !track) {
         return;
     }
-    
+
     // Prevent unnecessary re-render if same track is already open
     if (currentModalTrackId === track.id && domCache.trackModal.style.display === 'block') {
         return;
     }
-    
+
     currentModalTrackId = track.id;
-    
+
     // Validate and sanitize musicLink URL
     let musicLinkHtml = '';
     if (track.musicLink && isValidUrl(track.musicLink)) {
@@ -647,10 +723,52 @@ function openTrackModal(track) {
         const platformText = escapeHtml(track.platform);
         musicLinkHtml = `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="music-link-btn">Listen on ${platformText}</a>`;
     }
-    
+
     const albumArtDisplay = track.albumArt ? `<div class="modal-album-art">${escapeHtml(track.albumArt)}</div>` : '';
-    
-    // Build modal content safely with ARIA attributes
+
+    // Credits Section
+    let creditsHtml = '';
+    if (track.credits && track.credits.length > 0) {
+        creditsHtml = `
+            <div class="modal-section">
+                <h3 class="modal-section-title">Credits</h3>
+                <div class="credits-list">
+                    ${track.credits.map(credit => `
+                        <div class="credit-item">
+                            <span class="credit-role">${escapeHtml(credit.role)}:</span>
+                            <span class="credit-name">${escapeHtml(credit.engineer_name)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Community Rating Section
+    let ratingHtml = `
+        <div class="modal-section">
+            <h3 class="modal-section-title">Community Quality</h3>
+            <div class="rating-display">
+                <div class="immersiveness-score">
+                    <span class="score-label">Immersiveness:</span>
+                    <span class="score-value">${track.avgImmersiveness ? track.avgImmersiveness.toFixed(1) : 'N/A'}/10</span>
+                </div>
+                ${track.hallOfShame ? '<div class="hall-of-shame-badge">⚠️ Hall of Shame (Fake Atmos Reported)</div>' : ''}
+            </div>
+            <div class="rating-controls">
+                <p>Rate this mix:</p>
+                <div class="star-rating" data-track-id="${track.id}">
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="star-btn" data-rating="${n}" title="${n}/10">★</button>`).join('')}
+                </div>
+                <label class="fake-atmos-check">
+                    <input type="checkbox" id="fakeAtmosCheck"> Report as Fake Atmos
+                </label>
+                <button id="submitRatingBtn" class="submit-rating-btn" data-track-id="${track.id}">Submit Rating</button>
+            </div>
+        </div>
+    `;
+
+    // Build modal content
     const trackTitle = escapeHtml(track.title);
     const trackArtist = escapeHtml(track.artist);
     domCache.modalBody.innerHTML = `
@@ -669,6 +787,8 @@ function openTrackModal(track) {
         </div>
         <div id="modalDescription" class="modal-content-body">
             ${musicLinkHtml}
+            ${creditsHtml}
+            ${ratingHtml}
             ${track.review ? `<div class="modal-section">
                 <h3 class="modal-section-title">Review</h3>
                 <p class="modal-text">${escapeHtml(track.review)}</p>
@@ -683,10 +803,28 @@ function openTrackModal(track) {
             </div>` : ''}
         </div>
     `;
-    
+
     domCache.trackModal.style.display = 'block';
     document.body.style.overflow = 'hidden';
-    
+
+    // Add event listeners for rating
+    const starBtns = domCache.modalBody.querySelectorAll('.star-btn');
+    starBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const rating = parseInt(e.target.dataset.rating);
+            starBtns.forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.rating) <= rating);
+            });
+            domCache.modalBody.setAttribute('data-selected-rating', rating);
+        });
+    });
+
+    // Submit rating handler
+    const submitBtn = domCache.modalBody.querySelector('#submitRatingBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', () => submitRating(track.id));
+    }
+
     // Focus management for accessibility
     const firstFocusable = domCache.modalBody.querySelector('a, button');
     if (firstFocusable) {
@@ -694,11 +832,50 @@ function openTrackModal(track) {
     }
 }
 
+// Submit rating
+async function submitRating(trackId) {
+    const rating = domCache.modalBody.getAttribute('data-selected-rating');
+    const isFake = document.getElementById('fakeAtmosCheck')?.checked;
+
+    if (!rating && !isFake) {
+        alert('Please select a rating score or report as fake.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/tracks/${trackId}/rate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                score: rating ? parseInt(rating) : 0,
+                is_fake: !!isFake
+            })
+        });
+
+        if (response.ok) {
+            alert('Rating submitted! Thank you.');
+            // Update UI to reflect success (disable buttons, etc)
+            const submitBtn = document.getElementById('submitRatingBtn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submitted';
+                submitBtn.disabled = true;
+            }
+        } else {
+            alert('Failed to submit rating. You may have been rate limited.');
+        }
+    } catch (e) {
+        console.error('Error submitting rating:', e);
+        alert('Error submitting rating.');
+    }
+}
+
 function closeTrackModal() {
     if (!domCache.trackModal) {
         return;
     }
-    
+
     domCache.trackModal.style.display = 'none';
     document.body.style.overflow = '';
     currentModalTrackId = null;
@@ -709,7 +886,7 @@ function setupModalListeners() {
     if (!domCache.modalClose || !domCache.trackModal) {
         return;
     }
-    
+
     // Close button click handler and keyboard support
     domCache.modalClose.addEventListener('click', closeTrackModal);
     domCache.modalClose.addEventListener('keydown', (e) => {
@@ -718,14 +895,14 @@ function setupModalListeners() {
             closeTrackModal();
         }
     });
-    
+
     // Close modal when clicking outside of it
     domCache.trackModal.addEventListener('click', (e) => {
         if (e.target === domCache.trackModal) {
             closeTrackModal();
         }
     });
-    
+
     // Close modal with Escape key (single listener on document)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && domCache.trackModal && domCache.trackModal.style.display === 'block') {

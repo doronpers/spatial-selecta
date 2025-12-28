@@ -37,7 +37,9 @@ const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
  * @returns {boolean} - True if valid or null/undefined, false otherwise
  */
 function isValidDateFormat(dateStr) {
-  if (!dateStr) return true; // null/undefined/empty is valid (optional field)
+  // null/undefined is valid (optional field), but empty string is not
+  if (dateStr == null) return true;
+  if (dateStr === '') return false;
   
   // Check format: YYYY-MM-DD
   if (!DATE_FORMAT_REGEX.test(dateStr)) return false;

@@ -90,8 +90,8 @@ async function loadMusicData() {
                 throw new Error('No valid tracks found in API response');
             }
             
-            // Sort by release date (newest first)
-            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+            // Sort by Atmos release date (newest first) - fallback to releaseDate if not available
+            allTracks.sort((a, b) => new Date(b.atmosReleaseDate || b.releaseDate) - new Date(a.atmosReleaseDate || a.releaseDate));
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from API`);
@@ -128,8 +128,8 @@ async function loadMusicData() {
                 throw new Error('No valid tracks found in data');
             }
             
-            // Sort by release date (newest first)
-            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+            // Sort by Atmos release date (newest first) - fallback to releaseDate if not available
+            allTracks.sort((a, b) => new Date(b.atmosReleaseDate || b.releaseDate) - new Date(a.atmosReleaseDate || a.releaseDate));
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from data.json (fallback)`);
@@ -194,9 +194,10 @@ function validateTrack(track) {
         if (isNaN(atmosDate.getTime())) {
             return false;
         }
-        // Atmos release date should not be before original release date
+        // Atmos release date should not be before original release date - reject if invalid
         if (atmosDate < date) {
-            console.warn(`Track ${track.id}: atmosReleaseDate is before releaseDate`);
+            console.error(`Track ${track.id}: atmosReleaseDate (${track.atmosReleaseDate}) is before releaseDate (${track.releaseDate})`);
+            return false;
         }
     }
     

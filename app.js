@@ -83,7 +83,8 @@ async function loadMusicData() {
                 platform: track.platform,
                 releaseDate: track.release_date,
                 atmosReleaseDate: track.atmos_release_date || track.release_date,
-                albumArt: track.album_art || '🎵'
+                albumArt: track.album_art || '🎵',
+                musicLink: track.music_link || null
             })).filter(track => validateTrack(track));
             
             if (allTracks.length === 0) {

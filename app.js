@@ -28,6 +28,9 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Date format pattern for YYYY-MM-DD validation
+const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
  * Validate that a date string is in YYYY-MM-DD format and represents a valid date.
  * @param {string} dateStr - The date string to validate
@@ -37,8 +40,7 @@ function isValidDateFormat(dateStr) {
   if (!dateStr) return true; // null/undefined/empty is valid (optional field)
   
   // Check format: YYYY-MM-DD
-  const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateFormatRegex.test(dateStr)) return false;
+  if (!DATE_FORMAT_REGEX.test(dateStr)) return false;
   
   // Check if it's a valid date
   const date = new Date(dateStr);

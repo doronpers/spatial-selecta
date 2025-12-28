@@ -21,6 +21,7 @@ class Track(Base):
     release_date = Column(DateTime, nullable=False, index=True)  # Original song release date
     atmos_release_date = Column(DateTime, nullable=True, index=True)  # When Atmos mix was released
     album_art = Column(String(10), nullable=True)  # Emoji or URL
+    music_link = Column(String(500), nullable=True)  # Direct link to track on streaming platform
     apple_music_id = Column(String(200), nullable=True, unique=True)  # Apple Music track ID
     discovered_at = Column(DateTime, default=lambda: datetime.now())  # When we first detected this track
     updated_at = Column(DateTime, default=lambda: datetime.now(), onupdate=lambda: datetime.now())

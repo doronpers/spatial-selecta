@@ -98,25 +98,31 @@ async def trigger_manual_refresh(db: Session) -> RefreshResponse:
     )
 
 
-def sync_spatial_audio_tracks(db: Session) -> dict:
+def sync_spatial_audio_tracks(db: Session, comprehensive: bool = True) -> dict:
     """
     Sync spatial audio tracks from Apple Music API to database.
-    
+
     Args:
         db: Database session
-        
+        comprehensive: If True, use all discovery sources (playlists, charts, albums, search).
+                      If False, only scan curated Spatial Audio playlists.
+
     Returns:
         Dictionary with sync statistics
     """
     tracks_added = 0
     tracks_updated = 0
-    
+
     # Initialize Apple Music client
     apple_client = AppleMusicClient()
-    
+
     # Discover spatial audio tracks from Apple Music
-    logger.info("Discovering spatial audio tracks from Apple Music...")
-    discovered_tracks = apple_client.discover_spatial_audio_tracks()
+    if comprehensive:
+        logger.info("Starting COMPREHENSIVE spatial audio discovery (all sources)...")
+        discovered_tracks = apple_client.discover_all_spatial_audio_tracks()
+    else:
+        logger.info("Discovering spatial audio tracks from curated playlists only...")
+        discovered_tracks = apple_client.discover_spatial_audio_tracks()
     
     # Process each discovered track
     for track_data in discovered_tracks:
@@ -133,6 +139,8 @@ def sync_spatial_audio_tracks(db: Session) -> dict:
                 existing_track.album = track_data["album"]
                 existing_track.format = track_data["format"]
                 existing_track.release_date = track_data["release_date"]
+                existing_track.atmos_release_date = track_data.get("atmos_release_date")
+                existing_track.music_link = track_data.get("music_link")
                 existing_track.extra_metadata = json.dumps(track_data.get("metadata", {}))
                 existing_track.updated_at = datetime.now()
                 tracks_updated += 1
@@ -146,7 +154,9 @@ def sync_spatial_audio_tracks(db: Session) -> dict:
                     format=track_data["format"],
                     platform=track_data["platform"],
                     release_date=track_data["release_date"],
+                    atmos_release_date=track_data.get("atmos_release_date"),
                     album_art=track_data.get("album_art", "🎵"),
+                    music_link=track_data.get("music_link"),
                     apple_music_id=track_data.get("apple_music_id"),
                     extra_metadata=json.dumps(track_data.get("metadata", {})),
                     discovered_at=datetime.now()

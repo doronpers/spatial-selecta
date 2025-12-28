@@ -82,15 +82,10 @@ class CreditsScraper:
         
         # Strategy 1: Look for JSON data embedded in the page (most reliable)
         # Often found in a script tag with ID dealing with "shoebox" or "server-data"
-        scripts = soup.find_all('script', type='application/json')
-        for script in scripts:
-            if not script.string:
-                continue
-                
-            # Naive text search for credits patterns within JSON if structured parsing is complex
-            # "role":"Immersive Mix Engineer","name":"Steven Wilson"
-            # This is a fallback heuristic if full JSON parsing structure is unknown
-            pass
+        # scripts = soup.find_all('script', type='application/json')
+        # for script in scripts:
+        #    # Placeholder for future strict JSON parsing
+        #    pass
             
         # Strategy 2: DOM Parsing
         # Look for elements with class names related to credits

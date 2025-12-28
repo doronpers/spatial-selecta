@@ -654,7 +654,7 @@ function openTrackModal(track) {
                 <label class="fake-atmos-check">
                     <input type="checkbox" id="fakeAtmosCheck"> Report as Fake Atmos
                 </label>
-                <button onclick="submitRating(${track.id})" class="submit-rating-btn">Submit Rating</button>
+                <button id="submitRatingBtn" class="submit-rating-btn" data-track-id="${track.id}">Submit Rating</button>
             </div>
         </div>
     `;
@@ -710,6 +710,12 @@ function openTrackModal(track) {
         });
     });
 
+    // Submit rating handler
+    const submitBtn = domCache.modalBody.querySelector('#submitRatingBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', () => submitRating(track.id));
+    }
+
     // Focus management for accessibility
     const firstFocusable = domCache.modalBody.querySelector('a, button');
     if (firstFocusable) {
@@ -718,9 +724,9 @@ function openTrackModal(track) {
 }
 
 // Submit rating
-window.submitRating = async function (trackId) {
+async function submitRating(trackId) {
     const rating = domCache.modalBody.getAttribute('data-selected-rating');
-    const isFake = document.getElementById('fakeAtmosCheck').checked;
+    const isFake = document.getElementById('fakeAtmosCheck')?.checked;
 
     if (!rating && !isFake) {
         alert('Please select a rating score or report as fake.');
@@ -735,15 +741,18 @@ window.submitRating = async function (trackId) {
             },
             body: JSON.stringify({
                 score: rating ? parseInt(rating) : 0,
-                is_fake: isFake
+                is_fake: !!isFake
             })
         });
 
         if (response.ok) {
             alert('Rating submitted! Thank you.');
-            // Ideally refresh the track data here to show new average
-            const data = await response.json();
-            // Update local state if needed
+            // Update UI to reflect success (disable buttons, etc)
+            const submitBtn = document.getElementById('submitRatingBtn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submitted';
+                submitBtn.disabled = true;
+            }
         } else {
             alert('Failed to submit rating. You may have been rate limited.');
         }
@@ -751,7 +760,7 @@ window.submitRating = async function (trackId) {
         console.error('Error submitting rating:', e);
         alert('Error submitting rating.');
     }
-};
+}
 
 function closeTrackModal() {
     if (!domCache.trackModal) {

@@ -89,15 +89,21 @@ async function loadMusicData() {
                 format: track.format,
                 platform: track.platform,
                 releaseDate: track.release_date,
-                albumArt: track.album_art || '🎵'
+                atmosReleaseDate: track.atmos_release_date || track.release_date,
+                albumArt: track.album_art || '🎵',
+                musicLink: track.music_link || null
             })).filter(track => validateTrack(track));
-            
+
             if (allTracks.length === 0) {
                 throw new Error('No valid tracks found in API response');
             }
-            
-            // Sort by release date (newest first)
-            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+
+            // Sort by Atmos release date (newest first), fallback to releaseDate
+            allTracks.sort((a, b) => {
+                const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
+                const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
+                return dateB - dateA;
+            });
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from API`);
@@ -129,13 +135,17 @@ async function loadMusicData() {
             
             // Validate and sanitize each track
             allTracks = data.filter(track => validateTrack(track));
-            
+
             if (allTracks.length === 0) {
                 throw new Error('No valid tracks found in data');
             }
-            
-            // Sort by release date (newest first)
-            allTracks.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+
+            // Sort by Atmos release date (newest first), fallback to releaseDate
+            allTracks.sort((a, b) => {
+                const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
+                const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
+                return dateB - dateA;
+            });
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from data.json`);
@@ -447,10 +457,11 @@ function renderTracks() {
 
 // Create a track card HTML
 function createTrackCard(track) {
-    const isNew = isNewRelease(track.releaseDate);
+    const atmosDate = track.atmosReleaseDate || track.releaseDate;
+    const isNew = isNewRelease(atmosDate);
     const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
     const albumArtDisplay = track.albumArt ? `<div class="album-art-display">${track.albumArt}</div>` : '';
-    
+
     return `
         <div class="music-card" data-track-id="${track.id}">
             <div class="card-content">
@@ -461,7 +472,7 @@ function createTrackCard(track) {
                 <p class="track-album">${escapeHtml(track.album)}</p>
                 <div class="card-footer">
                     <span class="platform-badge">${escapeHtml(track.platform)}</span>
-                    <span class="release-date">${formatDate(track.releaseDate)}</span>
+                    <span class="release-date">${formatDate(atmosDate)}</span>
                 </div>
             </div>
         </div>
@@ -653,6 +664,14 @@ function openTrackModal(track) {
     // Build modal content safely with ARIA attributes
     const trackTitle = escapeHtml(track.title);
     const trackArtist = escapeHtml(track.artist);
+
+    // Format dates - show both original and Atmos release dates if different
+    const originalDate = formatDate(track.releaseDate);
+    const atmosDate = track.atmosReleaseDate ? formatDate(track.atmosReleaseDate) : null;
+    const dateDisplay = atmosDate && atmosDate !== originalDate
+        ? `<span class="modal-date">Original: ${originalDate} | Atmos: ${atmosDate}</span>`
+        : `<span class="modal-date">Released: ${originalDate}</span>`;
+
     domCache.modalBody.innerHTML = `
         <div class="modal-header">
             ${albumArtDisplay}
@@ -663,7 +682,7 @@ function openTrackModal(track) {
                 <p class="modal-album">${escapeHtml(track.album)}</p>
                 <div class="modal-meta">
                     <span class="modal-platform">${escapeHtml(track.platform)}</span>
-                    <span class="modal-date">Released ${formatDate(track.releaseDate)}</span>
+                    ${dateDisplay}
                 </div>
             </div>
         </div>

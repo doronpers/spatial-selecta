@@ -130,6 +130,52 @@ header h1 {
     background: var(--accent-color);
 }
 
+.sync-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--text-dark);
+    border: 1px solid var(--text-dark);
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sync-btn:hover {
+    background: var(--text-dark);
+    color: var(--text-light);
+}
+
+.sync-btn:active {
+    background: var(--secondary-color);
+}
+
+.sync-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sync-btn.syncing {
+    background: var(--accent-color);
+    color: var(--text-light);
+    border-color: var(--accent-color);
+}
+
+.sync-btn.success {
+    background: #2e7d32;
+    color: var(--text-light);
+    border-color: #2e7d32;
+}
+
+.sync-btn.error {
+    background: #c62828;
+    color: var(--text-light);
+    border-color: #c62828;
+}
+
 /* Music Grid */
 .music-grid {
     display: grid;

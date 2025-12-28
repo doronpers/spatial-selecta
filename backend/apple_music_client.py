@@ -307,7 +307,10 @@ class AppleMusicClient:
         release_date = self._parse_release_date(attributes.get("releaseDate"))
         
         # For atmos_release_date, use the release date if the track has Atmos
-        # In the future, this could be enhanced to track when Atmos was specifically added
+        # NOTE: This assumes tracks are released with Atmos from day one.
+        # For catalog releases where Atmos was added later, this will be inaccurate.
+        # Future enhancement: Track when Atmos was specifically added vs original release.
+        # For now, manual correction in data.json is recommended for older catalog releases.
         atmos_release_date = release_date if spatial_info["has_dolby_atmos"] else None
         
         return {

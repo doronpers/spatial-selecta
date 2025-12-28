@@ -91,7 +91,7 @@ async function loadMusicData() {
             }
             
             // Sort by Atmos release date (newest first) - fallback to releaseDate if not available
-            allTracks.sort((a, b) => new Date(b.atmosReleaseDate || b.releaseDate) - new Date(a.atmosReleaseDate || a.releaseDate));
+            sortTracksByAtmosDate(allTracks);
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from API`);
@@ -129,7 +129,7 @@ async function loadMusicData() {
             }
             
             // Sort by Atmos release date (newest first) - fallback to releaseDate if not available
-            allTracks.sort((a, b) => new Date(b.atmosReleaseDate || b.releaseDate) - new Date(a.atmosReleaseDate || a.releaseDate));
+            sortTracksByAtmosDate(allTracks);
             
             filteredTracks = [...allTracks];
             console.log(`Loaded ${allTracks.length} tracks from data.json (fallback)`);
@@ -152,7 +152,7 @@ function validateTrack(track) {
         return false;
     }
     
-    // Required fields (atmosReleaseDate is optional for backwards compatibility)
+    // Required fields (atmosReleaseDate is recommended for new tracks but optional for backwards compatibility)
     const requiredFields = ['id', 'title', 'artist', 'album', 'format', 'platform', 'releaseDate'];
     for (const field of requiredFields) {
         if (!(field in track) || track[field] === null || track[field] === undefined) {
@@ -242,6 +242,15 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// Sort tracks by Atmos release date (newest first), fallback to releaseDate
+function sortTracksByAtmosDate(tracks) {
+    return tracks.sort((a, b) => {
+        const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
+        const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
+        return dateB - dateA;
+    });
 }
 
 // Setup event listeners

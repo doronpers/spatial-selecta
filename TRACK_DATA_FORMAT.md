@@ -73,15 +73,18 @@ Each track entry in `data.json` must include the following fields:
 - **Example**: `"2019-11-29"`
 - **Rules**: Must be the actual date the song was originally released, not when the Atmos mix became available
 
-### `atmosReleaseDate` (required)
+### `atmosReleaseDate` (strongly recommended, required for new tracks)
 - **Type**: String (ISO 8601 date format)
 - **Description**: The date the Dolby Atmos/spatial audio mix was released
 - **Format**: `YYYY-MM-DD`
 - **Example**: `"2021-06-07"`
 - **Rules**: 
+  - **REQUIRED for all new tracks added to the system**
+  - Optional for backwards compatibility with existing data
   - Must be the date when the Atmos mix became available on the platform
   - Can be the same as `releaseDate` if the song was released with Atmos from day one
   - Must be >= `releaseDate`
+  - If unknown, use the album's Atmos release date or June 7, 2021 (Apple Music Spatial Audio launch)
 
 ### `albumArt` (required)
 - **Type**: String (emoji)

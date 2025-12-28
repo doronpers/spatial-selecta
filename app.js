@@ -42,13 +42,14 @@ function isValidDateFormat(dateStr) {
   // Check format: YYYY-MM-DD
   if (!DATE_FORMAT_REGEX.test(dateStr)) return false;
   
-  // Check if it's a valid date
-  const date = new Date(dateStr);
+  // Parse components and create UTC date for timezone-consistent validation
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  
   if (isNaN(date.getTime())) return false;
   
-  // Verify the date components match using UTC methods for timezone consistency
+  // Verify the date components match using UTC methods
   // (prevents dates like 2023-02-30 from being auto-adjusted to 2023-03-02)
-  const [year, month, day] = dateStr.split('-').map(Number);
   return date.getUTCFullYear() === year &&
          date.getUTCMonth() === month - 1 &&
          date.getUTCDate() === day;

@@ -50,7 +50,7 @@ The website will be available at `http://localhost:8080`
 
 **Quick Deploy to Render.com + GoDaddy Domain:**
 
-1. **Prerequisites:** 
+1. **Prerequisites:**
    - Get Apple Music Developer Token ([instructions](GODADDY_DOMAIN_SETUP.md#apple-music-api-token-setup))
    - Render.com account
    - GoDaddy DNS access
@@ -62,6 +62,7 @@ The website will be available at `http://localhost:8080`
    [Complete GoDaddy + Render Setup Guide](GODADDY_DOMAIN_SETUP.md)
 
 **TL;DR:**
+
 ```bash
 # 1. Deploy to Render using Blueprint (connect GitHub repo)
 # 2. Add APPLE_MUSIC_DEVELOPER_TOKEN to Render environment
@@ -114,6 +115,7 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 ```
 
 **Key Requirements**:
+
 - `musicLink` must be a valid Apple Music URL with correct IDs (see [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md))
 - `releaseDate` is the original song release date
 - `atmosReleaseDate` is when the Dolby Atmos mix became available

@@ -1,75 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>SpatialSelects.com - Latest Spatial Audio Releases</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>SpatialSelects.com - Latest Spatial Audio Releases</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>SpatialSelects.com</h1>
-            <p class="tagline">Latest releases in spatial audio formats</p>
-            <div class="last-updated">
-                Last updated: <span id="lastUpdated">Loading...</span>
-            </div>
+  <header>
+    <div class="container">
+      <h1>SpatialSelects.com</h1>
+      <p class="tagline">Latest releases in spatial audio formats</p>
+      <div class="last-updated">
+        Last updated: <span id="lastUpdated">Loading...</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="main-nav">
+    <div class="container">
+      <ul class="nav-tabs">
+        <li><a href="#releases" class="active" data-view="releases">Releases</a></li>
+        <li><a href="#engineers" data-view="engineers">Engineers</a></li>
+        <li><a href="#hardware" data-view="hardware">Hardware Guide</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- Releases View -->
+    <div id="releasesView" class="view-section active">
+      <section class="filters">
+        <div class="filter-group">
+          <label for="platformFilter">Platform:</label>
+          <select id="platformFilter">
+            <option value="all">All Platforms</option>
+            <option value="Apple Music">Apple Music</option>
+          </select>
         </div>
-    </header>
 
-    <main class="container">
-        <section class="filters">
-            <div class="filter-group">
-                <label for="platformFilter">Platform:</label>
-                <select id="platformFilter">
-                    <option value="all">All Platforms</option>
-                    <option value="Apple Music">Apple Music</option>
-                    <option value="Amazon Music">Amazon Music</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="formatFilter">Format:</label>
-                <select id="formatFilter">
-                    <option value="all">All Formats</option>
-                    <option value="Dolby Atmos">Dolby Atmos</option>
-                    <option value="360 Reality Audio">360 Reality Audio</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <button id="refreshButton" class="refresh-btn">Refresh</button>
-            </div>
-            <div class="filter-group">
-                <button id="syncButton" class="sync-btn" title="Fetch latest tracks from Apple Music (rate limited to once per hour)">Sync New Tracks</button>
-            </div>
-        </section>
-
-        <section id="musicGrid" class="music-grid">
-            <!-- Music cards will be dynamically inserted here -->
-        </section>
-
-        <section id="emptyState" class="empty-state" style="display: none;">
-            <p>No releases found matching your filters.</p>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>© 2026 SpatialSelects.com | Tracking spatial audio releases</p>
+        <div class="filter-group">
+          <label for="formatFilter">Format:</label>
+          <select id="formatFilter">
+            <option value="all">All Formats</option>
+            <option value="Dolby Atmos">Dolby Atmos</option>
+          </select>
         </div>
-    </footer>
+      </section>
 
-    <!-- Track Detail Modal -->
-    <div id="trackModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription">
-        <div class="modal-content">
-            <span class="modal-close" aria-label="Close modal" role="button" tabindex="0">&times;</span>
-            <div id="modalBody">
-                <!-- Modal content will be dynamically inserted here -->
-            </div>
-        </div>
+      <section id="releases" class="releases-list">
+        <!-- Releases will be injected here -->
+      </section>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Engineers View -->
+    <div id="engineersView" class="view-section">
+      <section id="engineers" class="engineers-list">
+        <!-- Engineers content -->
+      </section>
+    </div>
+
+    <!-- Hardware Guide View -->
+    <div id="hardwareView" class="view-section">
+      <section id="hardware" class="hardware-guide">
+        <!-- Hardware content -->
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>

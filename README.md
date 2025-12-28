@@ -5,6 +5,9 @@ A website that automatically tracks and displays the latest music releases avail
 ## Features
 
 - **Automated Discovery**: Backend automatically scans for new spatial audio releases every 48 hours
+- **Engineer Index**: Explore top mix engineers and their portfolios
+- **Community Ratings**: Rate immersiveness and flag fake Atmos mixes
+- **Hardware Guide**: Educational resources for optimal listening
 - **Platform Filtering**: Filter by platform (Apple Music, Amazon Music)
 - **Format Filtering**: Filter by audio format (Dolby Atmos, 360 Reality Audio)
 - **New Release Badges**: Highlights releases from the last 30 days
@@ -181,7 +184,7 @@ uvicorn backend.main:app --reload --port 8000
 
 ## Future Enhancements
 
-- ✅ Integration with Apple Music API for automatic data fetching
+- Apple Music API integration (Done)
 - Amazon Music API integration
 - User accounts and favorites
 - Playlist creation

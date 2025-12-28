@@ -18,7 +18,9 @@ A production-ready REST API that serves as the core of the spatial audio detecti
 **Endpoints**:
 - `GET /api/tracks` - List tracks with filtering (platform, format, pagination)
 - `GET /api/tracks/new?days=30` - Get recently released tracks
-- `GET /api/tracks/{id}` - Get specific track details
+- `GET /api/tracks/{id}` - Get specific track details (with credits)
+- `POST /api/tracks/{id}/rate` - Submit community rating
+- `GET /api/engineers` - List top mix engineers
 - `POST /api/refresh` - Manually trigger data sync
 - `GET /api/stats` - Database statistics
 - `GET /api/health` - Health check

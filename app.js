@@ -29,20 +29,40 @@ function escapeHtml(str) {
 }
 
 /**
+ * Validate that a date string is in YYYY-MM-DD format and represents a valid date.
+ * @param {string} dateStr - The date string to validate
+ * @returns {boolean} - True if valid or null/undefined, false otherwise
+ */
+function isValidDateFormat(dateStr) {
+  if (!dateStr) return true; // null/undefined/empty is valid (optional field)
+  
+  // Check format: YYYY-MM-DD
+  const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateFormatRegex.test(dateStr)) return false;
+  
+  // Check if it's a valid date
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return false;
+  
+  // Verify the date components match (prevents dates like 2023-02-30)
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return date.getFullYear() === year &&
+         date.getMonth() === month - 1 &&
+         date.getDate() === day;
+}
+
+/**
  * Validate a track object before rendering/using it.
- * Ensures presence of key fields and that dates are parseable or safely null.
+ * Ensures presence of key fields and that dates are in correct format (YYYY-MM-DD) and valid.
  */
 function validateTrack(track) {
   if (!track || typeof track !== 'object') return false;
   if (!track.id) return false;
   if (!track.title || !track.artist) return false;
 
-  // Dates can be missing; if present, ensure they are parseable by Date.
-  const rd = track.releaseDate ? new Date(track.releaseDate) : null;
-  const ad = track.atmosReleaseDate ? new Date(track.atmosReleaseDate) : null;
-
-  const releaseOk = rd === null || !isNaN(rd.getTime());
-  const atmosOk = ad === null || !isNaN(ad.getTime());
+  // Validate date format and validity
+  const releaseOk = isValidDateFormat(track.releaseDate);
+  const atmosOk = isValidDateFormat(track.atmosReleaseDate);
 
   return releaseOk && atmosOk;
 }

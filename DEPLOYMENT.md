@@ -1,32 +1,44 @@
 # Deployment Guide
 
-This guide covers deploying SpatialSelects.com to production, including DNS configuration and hosting setup.
+This guide provides an overview of deployment options for SpatialSelects.com. For detailed step-by-step instructions, see the specific guides below.
 
-## 🚀 Recommended: Deploy to Render (Easiest)
+## 🚀 Quick Start (Recommended)
 
-**For most users, we recommend deploying to Render.com** - it's the simplest option with no server management needed.
+**For fastest deployment with GoDaddy domain:**
+👉 **[DEPLOYMENT_QUICKSTART.md](DEPLOYMENT_QUICKSTART.md)** - 15-30 minute setup
 
-👉 **See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for step-by-step Render deployment guide**
+**For detailed Render.com deployment:**
+👉 **[RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)** - Complete Render guide
 
-**Why Render?**
-- ✅ 10-minute setup (vs 2-4 hours for VPS)
-- ✅ No server management
-- ✅ Automatic SSL, deployments, scaling
-- ✅ Built-in background job support
-- ✅ $7-14/month (comparable to VPS)
+**For GoDaddy DNS configuration:**
+👉 **[GODADDY_DOMAIN_SETUP.md](GODADDY_DOMAIN_SETUP.md)** - Domain setup guide
 
----
+## Deployment Options Overview
 
-## Alternative Options
+### Option 1: Render.com (Recommended for Most Users)
+- ✅ **Easiest**: 10-minute setup
+- ✅ **No server management** required
+- ✅ **Automatic SSL**, deployments, scaling
+- ✅ **Built-in background jobs** for scheduler
+- ✅ **$7-14/month** (comparable to VPS)
+- 📖 **See**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for full guide
 
-If you need more control or want to learn server management, see the options below.
+### Option 2: Traditional VPS/Server
+- More control and customization
+- Requires server management knowledge
+- See "VPS Deployment" section below
+
+### Option 3: Docker
+- Containerized deployment
+- See "Docker Deployment" section below
 
 ## Architecture Overview
 
 SpatialSelects.com consists of:
-- **Frontend**: Static HTML/CSS/JS files served via web server
-- **Backend API**: Python FastAPI application (port 8000)
+- **Frontend**: Static HTML/CSS/JS files (can be served via CDN or web server)
+- **Backend API**: Python FastAPI application (runs on port 8000)
 - **Database**: SQLite (development) or PostgreSQL (production recommended)
+- **Scheduler**: Background jobs run every 48 hours to discover new tracks
 
 ## Pre-Deployment Checklist
 
@@ -80,7 +92,7 @@ python3 backend/setup.py
 
 ## Deployment Options
 
-### Option 1: Traditional VPS/Server (Recommended)
+### Option 2: Traditional VPS/Server
 
 #### Server Requirements
 - Ubuntu 20.04+ or similar Linux distribution
@@ -260,7 +272,7 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 sudo certbot renew --dry-run
 ```
 
-### Option 2: Docker Deployment
+### Option 3: Docker Deployment
 
 #### Create Dockerfile
 
@@ -354,55 +366,13 @@ Deploy:
 docker-compose up -d
 ```
 
-### Option 3: Platform-as-a-Service (PaaS)
-
-#### Render.com
-
-1. **Create Web Service**:
-   - Connect GitHub repository
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
-   - Environment: Python 3
-   - Add environment variables from `.env`
-
-2. **Create Static Site**:
-   - Connect same repository
-   - Build Command: `echo "No build needed"`
-   - Publish Directory: `.`
-   - Add custom domain
-
-#### Heroku
-
-1. **Create `Procfile`**:
-```
-web: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
-```
-
-2. **Deploy**:
-```bash
-heroku create spatial-selecta
-heroku config:set ENVIRONMENT=production
-heroku config:set ALLOWED_ORIGINS=https://yourdomain.com
-heroku config:set REFRESH_API_TOKEN=<your-token>
-# ... set other env vars
-git push heroku main
-```
-
-#### Railway
-
-1. Connect GitHub repository
-2. Set environment variables
-3. Railway auto-detects Python and runs the app
+**Note**: For Render.com deployment, see [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for complete instructions.
 
 ## DNS Configuration
 
-### Step 1: Purchase Domain
+**For GoDaddy domains with Render:** See [GODADDY_DOMAIN_SETUP.md](GODADDY_DOMAIN_SETUP.md)
 
-Purchase a domain from a registrar (Namecheap, Google Domains, Cloudflare, etc.)
-
-### Step 2: Configure DNS Records
-
-#### For VPS/Server Deployment:
+**For VPS/Server Deployment:**
 
 **A Record** (IPv4):
 ```
@@ -428,17 +398,7 @@ Value: <your-server-ipv6-address>
 TTL: 3600
 ```
 
-#### For Cloudflare (Recommended):
-
-1. Add site to Cloudflare
-2. Update nameservers at your registrar
-3. Configure DNS:
-   - A record: `@` → Server IP
-   - A record: `www` → Server IP
-4. Enable SSL/TLS: Full (strict)
-5. Enable Proxy (orange cloud) for DDoS protection
-
-### Step 3: Verify DNS Propagation
+### Verify DNS Propagation
 
 ```bash
 # Check DNS records

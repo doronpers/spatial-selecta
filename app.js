@@ -1,7 +1,74 @@
 // app.js
 
 // Configuration
-const API_URL = typeof window !== 'undefined' && window.API_URL ? window.API_URL : 'https://api.spatialselects.com';
+// #region agent log
+const determineApiUrl = () => {
+  // Allow explicit override via window.API_URL (highest priority)
+  if (typeof window !== 'undefined' && window.API_URL) {
+    const logData = {
+      location: 'app.js:4',
+      message: 'Using window.API_URL override',
+      data: { selectedUrl: window.API_URL },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'post-fix',
+      hypothesisId: 'A'
+    };
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+    return window.API_URL;
+  }
+  
+  // Check if running locally
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname || '';
+    const origin = window.location.origin || '';
+    
+    const isFileProtocol = protocol === 'file:';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+    const isNotHttps = protocol !== 'https:';
+    const isNotProductionDomain = !hostname.includes('spatialselects.com') && 
+                                  !hostname.includes('onrender.com');
+    
+    const logData = {
+      location: 'app.js:4',
+      message: 'Determining API_URL',
+      data: {
+        protocol,
+        hostname,
+        origin,
+        isFileProtocol,
+        isLocalhost,
+        isNotHttps,
+        isNotProductionDomain
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'post-fix',
+      hypothesisId: 'A'
+    };
+    
+    // Use localhost API if: file://, localhost, empty hostname (file://), or not HTTPS and not production domain
+    if (isFileProtocol || isLocalhost || (isNotHttps && isNotProductionDomain)) {
+      const localUrl = 'http://localhost:8000';
+      logData.message = 'Using localhost API URL (local development detected)';
+      logData.data.selectedUrl = localUrl;
+      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+      return localUrl;
+    }
+    
+    // Log that we're using production
+    logData.message = 'Using production API URL';
+    logData.data.selectedUrl = 'https://api.spatialselects.com';
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+  }
+  
+  // Default to production API
+  return 'https://api.spatialselects.com';
+};
+const API_URL = determineApiUrl();
+console.log('API_URL determined:', API_URL, 'Protocol:', typeof window !== 'undefined' ? window.location.protocol : 'N/A', 'Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+// #endregion
 
 // Simple DOM cache to avoid repeated lookups
 const domCache = {
@@ -209,6 +276,19 @@ function renderTracks() {
  * Merges both branches: keeps Atmos-aware fields/sorting and metadata (credits, avgImmersiveness, hallOfShame).
  */
 async function loadMusicData() {
+  // #region agent log
+  const logEntry = {
+    location: 'app.js:211',
+    message: 'loadMusicData entry',
+    data: { apiUrl: API_URL, filters: currentFilters },
+    timestamp: Date.now(),
+    sessionId: 'debug-session',
+    runId: 'run1',
+    hypothesisId: 'B'
+  };
+  fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+  // #endregion
+  
   try {
     // Optional: show loading indicator
     if (domCache.loadingSpinner) domCache.loadingSpinner.style.display = 'block';
@@ -223,12 +303,35 @@ async function loadMusicData() {
       params.append('format', currentFilters.format);
     }
 
+    const apiEndpoint = `${API_URL}/api/tracks?${params.toString()}`;
+    // #region agent log
+    logEntry.message = 'Before fetch attempt';
+    logEntry.data = { ...logEntry.data, apiEndpoint, attemptType: 'api' };
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+    // #endregion
+
     // Try to load from backend API first
-    const response = await fetch(`${API_URL}/api/tracks?${params.toString()}`, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      credentials: 'omit'
-    });
+    let response;
+    try {
+      response = await fetch(apiEndpoint, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'omit'
+      });
+      // #region agent log
+      logEntry.message = 'Fetch completed';
+      logEntry.data = { ...logEntry.data, responseOk: response.ok, responseStatus: response.status, responseStatusText: response.statusText };
+      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      // #endregion
+    } catch (fetchError) {
+      // #region agent log
+      logEntry.message = 'Fetch failed with error';
+      logEntry.data = { ...logEntry.data, errorType: fetchError.constructor.name, errorMessage: fetchError.message, errorName: fetchError.name };
+      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      // #endregion
+      // Network error - try fallback to data.json
+      throw new Error('API_FETCH_FAILED');
+    }
 
     if (response.ok) {
       const apiTracks = await response.json();
@@ -274,11 +377,21 @@ async function loadMusicData() {
         return timeB - timeA; // newest first
       });
     } else {
+      // #region agent log
+      logEntry.message = 'API response not ok, trying fallback';
+      logEntry.data = { ...logEntry.data, responseStatus: response.status, attemptType: 'fallback' };
+      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      // #endregion
       // Fallback to local JSON file
       const fallbackResp = await fetch('/data.json', {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
+      // #region agent log
+      logEntry.message = 'Fallback fetch completed';
+      logEntry.data = { ...logEntry.data, fallbackOk: fallbackResp.ok, fallbackStatus: fallbackResp.status };
+      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      // #endregion
       if (!fallbackResp.ok) throw new Error('Failed to load fallback data.json');
       const jsonTracks = await fallbackResp.json();
       if (!Array.isArray(jsonTracks)) throw new Error('Invalid fallback format: expected array');
@@ -309,9 +422,90 @@ async function loadMusicData() {
         });
     }
   } catch (err) {
+    // #region agent log
+    logEntry.message = 'loadMusicData catch block';
+    logEntry.data = { ...logEntry.data, errorType: err.constructor.name, errorMessage: err.message, errorName: err.name, willTryFallback: err.message === 'API_FETCH_FAILED' };
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+    // #endregion
+    
+    // If API fetch failed, try fallback to data.json
+    if (err.message === 'API_FETCH_FAILED') {
+      // #region agent log
+      logEntry.message = 'Attempting data.json fallback after API failure';
+      logEntry.data = { ...logEntry.data, attemptType: 'fallback-after-error' };
+      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      // #endregion
+      try {
+        const fallbackResp = await fetch('/data.json', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        // #region agent log
+        logEntry.message = 'Fallback fetch after error completed';
+        logEntry.data = { ...logEntry.data, fallbackOk: fallbackResp.ok, fallbackStatus: fallbackResp.status };
+        fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+        // #endregion
+        if (fallbackResp.ok) {
+          const jsonTracks = await fallbackResp.json();
+          if (Array.isArray(jsonTracks)) {
+            allTracks = jsonTracks
+              .map(track => ({
+                id: track.id,
+                title: track.title,
+                artist: track.artist,
+                album: track.album,
+                format: track.format,
+                platform: track.platform,
+                releaseDate: track.releaseDate || track.release_date,
+                atmosReleaseDate: track.atmosReleaseDate || track.atmos_release_date || track.releaseDate || track.release_date,
+                albumArt: track.albumArt || track.album_art || '🎵',
+                musicLink: track.musicLink || track.music_link || null,
+                credits: Array.isArray(track.credits) ? track.credits : [],
+                avgImmersiveness: track.avgImmersiveness ?? track.avg_immersiveness,
+                hallOfShame: track.hallOfShame ?? track.hall_of_shame
+              }))
+              .filter(track => validateTrack(track))
+              .sort((a, b) => {
+                const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
+                const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
+                const timeA = isNaN(dateA.getTime()) ? -Infinity : dateA.getTime();
+                const timeB = isNaN(dateB.getTime()) ? -Infinity : dateB.getTime();
+                return timeB - timeA;
+              });
+            // #region agent log
+            logEntry.message = 'Fallback data loaded successfully';
+            logEntry.data = { ...logEntry.data, tracksLoaded: allTracks.length };
+            fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+            // #endregion
+            return; // Success - exit early
+          }
+        }
+      } catch (fallbackErr) {
+        // #region agent log
+        logEntry.message = 'Fallback also failed';
+        logEntry.data = { ...logEntry.data, fallbackError: fallbackErr.message, isFileProtocol: typeof window !== 'undefined' && window.location.protocol === 'file:' };
+        fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+        // #endregion
+        
+        // If using file:// protocol, show helpful message
+        if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
+          if (domCache.errorBanner) {
+            domCache.errorBanner.innerHTML = '⚠️ Using file:// protocol. Please use a local HTTP server:<br>Run: <code>python -m http.server 8080</code> or <code>npx http-server</code><br>Then open: <code>http://localhost:8080</code>';
+            domCache.errorBanner.style.display = 'block';
+          }
+          return; // Exit early to avoid showing generic error
+        }
+      }
+    }
+    
     console.error('loadMusicData error:', err);
     if (domCache.errorBanner) {
-      domCache.errorBanner.textContent = 'Failed to load tracks. Please try again later.';
+      const isFileProtocol = typeof window !== 'undefined' && window.location.protocol === 'file:';
+      if (isFileProtocol) {
+        domCache.errorBanner.innerHTML = '⚠️ Using file:// protocol. Please use a local HTTP server:<br>Run: <code>python -m http.server 8080</code> or <code>npx http-server</code><br>Then open: <code>http://localhost:8080</code>';
+      } else {
+        domCache.errorBanner.textContent = 'Failed to load tracks. Please try again later.';
+      }
       domCache.errorBanner.style.display = 'block';
     }
   } finally {
@@ -435,7 +629,24 @@ async function checkSyncStatus() {
   if (!domCache.syncButton) return;
 
   try {
+    // #region agent log
+    const syncLog = {
+      location: 'app.js:434',
+      message: 'checkSyncStatus entry',
+      data: { apiUrl: API_URL, endpoint: `${API_URL}/api/refresh/status` },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'B'
+    };
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(syncLog)}).catch(()=>{});
+    // #endregion
     const response = await fetch(`${API_URL}/api/refresh/status`);
+    // #region agent log
+    syncLog.message = 'checkSyncStatus fetch completed';
+    syncLog.data = { ...syncLog.data, responseOk: response.ok, responseStatus: response.status };
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(syncLog)}).catch(()=>{});
+    // #endregion
     if (response.ok) {
       const status = await response.json();
       if (!status.can_refresh) {
@@ -448,6 +659,18 @@ async function checkSyncStatus() {
       }
     }
   } catch (error) {
+    // #region agent log
+    const syncLog = {
+      location: 'app.js:450',
+      message: 'checkSyncStatus error',
+      data: { apiUrl: API_URL, errorType: error.constructor.name, errorMessage: error.message, errorName: error.name },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'B'
+    };
+    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(syncLog)}).catch(()=>{});
+    // #endregion
     console.warn('Could not check sync status:', error);
   }
 }

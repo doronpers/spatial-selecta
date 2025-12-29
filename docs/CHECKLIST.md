@@ -1,12 +1,12 @@
-# Pre-Launch Checklist - Spatial Selecta
+# Pre-Launch Checklist
 
-This document outlines everything that needs to be completed before taking Spatial Selecta live.
+Complete checklist for deploying SpatialSelects.com to production.
 
 ## 🔴 Critical Requirements (Must Complete)
 
 ### 1. Apple Music API Configuration
 - [ ] **Obtain Apple Music Developer Token**
-  - Join Apple Developer Program ($99/year) if not already enrolled
+  - Join Apple Developer Program ($99/year)
   - Create MusicKit Identifier at https://developer.apple.com/account/
   - Generate JWT developer token (valid for 6 months)
   - Store token securely (DO NOT commit to git)
@@ -16,8 +16,6 @@ This document outlines everything that needs to be completed before taking Spati
   - Verify token works: Test API connection in backend logs
 
 **Status**: ⚠️ **REQUIRED** - Backend cannot discover tracks without this
-
----
 
 ### 2. Production Environment Variables
 - [ ] **Generate Secure Refresh Token**
@@ -39,8 +37,6 @@ This document outlines everything that needs to be completed before taking Spati
 
 **Status**: ⚠️ **REQUIRED** - Application won't work correctly without these
 
----
-
 ### 3. Database Setup
 - [ ] **Create Production Database**
   - PostgreSQL (recommended) or SQLite
@@ -60,8 +56,6 @@ This document outlines everything that needs to be completed before taking Spati
 
 **Status**: ⚠️ **REQUIRED** - No data can be stored without database
 
----
-
 ### 4. CORS Configuration
 - [ ] **Set ALLOWED_ORIGINS**
   - Must include your frontend domain(s)
@@ -76,21 +70,14 @@ This document outlines everything that needs to be completed before taking Spati
 
 **Status**: ⚠️ **REQUIRED** - Frontend won't be able to fetch data without proper CORS
 
----
-
 ### 5. Frontend API URL Configuration
-- [ ] **Update app.js for Production**
-  - Current code assumes API is on same domain (`/api`)
-  - If backend/frontend are on different domains, update `API_URL`:
-  ```javascript
-  const API_URL = window.location.hostname.includes('onrender.com')
-      ? 'https://your-backend-name.onrender.com/api'
-      : '/api';
-  ```
+- [ ] **Verify API URL Detection**
+  - Frontend automatically detects API URL based on hostname
+  - For Render: Should auto-detect backend subdomain
+  - For custom domains: May need manual configuration
+  - Test in browser console: Check `API_URL` value
 
 **Status**: ⚠️ **REQUIRED** - Frontend won't load data if API URL is wrong
-
----
 
 ## 🟡 Important Setup (Should Complete)
 
@@ -101,8 +88,8 @@ This document outlines everything that needs to be completed before taking Spati
   - Other PaaS (Heroku, Railway, etc.)
 
 - [ ] **Deploy Backend API**
-  - Follow [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) if using Render
-  - Or follow [DEPLOYMENT.md](DEPLOYMENT.md) for VPS
+  - Follow [Deployment Guide](DEPLOYMENT.md#quick-start-rendercom---recommended) for Render
+  - Or follow VPS deployment instructions
   - Verify health endpoint: `https://your-api-url/api/health`
 
 - [ ] **Deploy Frontend**
@@ -111,8 +98,6 @@ This document outlines everything that needs to be completed before taking Spati
   - Verify site loads and displays tracks
 
 **Status**: ✅ **RECOMMENDED** - Can use Render blueprint (`render.yaml`) for one-click deploy
-
----
 
 ### 7. Domain Configuration (Optional but Recommended)
 - [ ] **Purchase Domain**
@@ -131,8 +116,6 @@ This document outlines everything that needs to be completed before taking Spati
 
 **Status**: 🟢 **OPTIONAL** - Site works on hosting provider subdomain
 
----
-
 ### 8. Initial Data Population
 - [ ] **Import Existing Tracks**
   - Run `python3 backend/setup.py` after deployment
@@ -145,8 +128,6 @@ This document outlines everything that needs to be completed before taking Spati
   - Test "New" badge appears for recent releases
 
 **Status**: ✅ **RECOMMENDED** - Site will work but be empty without data
-
----
 
 ### 9. Background Scheduler Verification
 - [ ] **Verify Scheduler Starts**
@@ -163,8 +144,6 @@ This document outlines everything that needs to be completed before taking Spati
 
 **Status**: ✅ **RECOMMENDED** - Manual refresh works without scheduler
 
----
-
 ## 🟢 Nice to Have (Can Add Later)
 
 ### 10. Monitoring & Analytics
@@ -178,11 +157,9 @@ This document outlines everything that needs to be completed before taking Spati
 - [ ] Optimize images (if adding album art later)
 
 ### 12. Security Enhancements
-- [ ] Review SECURITY.md checklist
+- [ ] Review [Security Guide](SECURITY.md) checklist
 - [ ] Set up rate limiting (already implemented)
 - [ ] Regular security audits
-
----
 
 ## 📋 Quick Start Checklist (Minimum Viable Launch)
 
@@ -194,45 +171,10 @@ For a **minimum viable launch**, you need:
 4. ✅ **Backend Deployment** - Deploy API to hosting provider
 5. ✅ **Frontend Deployment** - Deploy static site
 6. ✅ **CORS Configuration** - Set `ALLOWED_ORIGINS` correctly
-7. ✅ **API URL** - Update frontend `app.js` if needed
+7. ✅ **API URL** - Verify frontend API URL detection
 8. ✅ **Initial Data** - Import tracks or run first scan
 
 **Estimated Time**: 30-60 minutes (with Render) or 2-4 hours (with VPS)
-
----
-
-## 🚀 Deployment Options Summary
-
-### Option 1: Render.com (Easiest - Recommended)
-**Time**: 10-15 minutes  
-**Cost**: $7-14/month  
-**Steps**:
-1. Push code to GitHub
-2. Use `render.yaml` blueprint OR manually create:
-   - Web Service (backend)
-   - Static Site (frontend)
-   - PostgreSQL database
-3. Set environment variables
-4. Initialize database via Shell
-5. Done!
-
-**See**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
-
-### Option 2: VPS (More Control)
-**Time**: 2-4 hours  
-**Cost**: $6-12/month  
-**Steps**:
-1. Set up Ubuntu server
-2. Install Python, PostgreSQL, Nginx
-3. Clone repository
-4. Configure environment variables
-5. Set up systemd service
-6. Configure Nginx reverse proxy
-7. Set up SSL with Let's Encrypt
-
-**See**: [DEPLOYMENT.md](DEPLOYMENT.md)
-
----
 
 ## 🔍 Pre-Launch Testing
 
@@ -249,7 +191,33 @@ Before going live, test:
 - [ ] Scheduler starts (check logs)
 - [ ] Manual refresh works (with auth token)
 
----
+## 🚀 Deployment Options Summary
+
+### Option 1: Render.com (Easiest - Recommended)
+**Time**: 10-15 minutes  
+**Cost**: $7-14/month  
+**Steps**:
+1. Push code to GitHub
+2. Use `render.yaml` blueprint OR manually create services
+3. Set environment variables
+4. Initialize database via Shell
+5. Done!
+
+**See**: [Deployment Guide](DEPLOYMENT.md#quick-start-rendercom---recommended)
+
+### Option 2: VPS (More Control)
+**Time**: 2-4 hours  
+**Cost**: $6-12/month  
+**Steps**:
+1. Set up Ubuntu server
+2. Install Python, PostgreSQL, Nginx
+3. Clone repository
+4. Configure environment variables
+5. Set up systemd service
+6. Configure Nginx reverse proxy
+7. Set up SSL with Let's Encrypt
+
+**See**: [Deployment Guide](DEPLOYMENT.md#vps-deployment)
 
 ## 📝 Current Status
 
@@ -269,28 +237,21 @@ Based on code review:
 - Production environment variables (must set)
 - Database initialization (must run)
 - CORS origins (must configure)
-- Frontend API URL (may need update)
+- Frontend API URL (verify auto-detection)
 
 ❌ **Missing**:
 - Actual deployment to hosting provider
 - Domain configuration (optional)
 - Monitoring setup (optional)
 
----
-
 ## 🎯 Next Steps
 
 1. **Get Apple Music Developer Token** (if not already have)
 2. **Choose hosting provider** (Render recommended)
-3. **Deploy backend** following deployment guide
+3. **Deploy backend** following [Deployment Guide](DEPLOYMENT.md)
 4. **Deploy frontend** to static hosting
 5. **Configure environment variables**
 6. **Initialize database**
 7. **Test everything**
 8. **Go live!** 🎉
-
----
-
-**Last Updated**: 2025-01-27  
-**Version**: 1.0.0
 

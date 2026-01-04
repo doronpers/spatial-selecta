@@ -14,7 +14,7 @@ const determineApiUrl = () => {
       runId: 'post-fix',
       hypothesisId: 'A'
     };
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+    sendDebugLog(logData);
     return window.API_URL;
   }
   
@@ -53,14 +53,14 @@ const determineApiUrl = () => {
       const localUrl = 'http://localhost:8000';
       logData.message = 'Using localhost API URL (local development detected)';
       logData.data.selectedUrl = localUrl;
-      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+      sendDebugLog(logData);
       return localUrl;
     }
     
     // Log that we're using production
     logData.message = 'Using production API URL';
     logData.data.selectedUrl = 'https://api.spatialselects.com';
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logData)}).catch(()=>{});
+    sendDebugLog(logData);
   }
   
   // Default to production API
@@ -69,6 +69,21 @@ const determineApiUrl = () => {
 const API_URL = determineApiUrl();
 console.log('API_URL determined:', API_URL, 'Protocol:', typeof window !== 'undefined' ? window.location.protocol : 'N/A', 'Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
 // #endregion
+
+// Debug logging helper (no-op unless DEBUG_LOG_ENDPOINT is provided at runtime)
+const DEBUG_LOG_ENDPOINT = (typeof window !== 'undefined' && window.DEBUG_LOG_ENDPOINT) ? window.DEBUG_LOG_ENDPOINT : '';
+const sendDebugLog = (payload) => {
+  if (!DEBUG_LOG_ENDPOINT) return;
+  try {
+    fetch(DEBUG_LOG_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (e) {
+    console.warn('Debug log failed:', e);
+  }
+};
 
 // Simple DOM cache to avoid repeated lookups
 const domCache = {
@@ -286,7 +301,7 @@ async function loadMusicData() {
     runId: 'run1',
     hypothesisId: 'B'
   };
-  fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+  sendDebugLog(logEntry);
   // #endregion
   
   try {
@@ -307,7 +322,7 @@ async function loadMusicData() {
     // #region agent log
     logEntry.message = 'Before fetch attempt';
     logEntry.data = { ...logEntry.data, apiEndpoint, attemptType: 'api' };
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+    sendDebugLog(logEntry);
     // #endregion
 
     // Try to load from backend API first
@@ -321,13 +336,13 @@ async function loadMusicData() {
       // #region agent log
       logEntry.message = 'Fetch completed';
       logEntry.data = { ...logEntry.data, responseOk: response.ok, responseStatus: response.status, responseStatusText: response.statusText };
-      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      sendDebugLog(logEntry);
       // #endregion
     } catch (fetchError) {
       // #region agent log
       logEntry.message = 'Fetch failed with error';
       logEntry.data = { ...logEntry.data, errorType: fetchError.constructor.name, errorMessage: fetchError.message, errorName: fetchError.name };
-      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      sendDebugLog(logEntry);
       // #endregion
       // Network error - try fallback to data.json
       throw new Error('API_FETCH_FAILED');
@@ -380,7 +395,7 @@ async function loadMusicData() {
       // #region agent log
       logEntry.message = 'API response not ok, trying fallback';
       logEntry.data = { ...logEntry.data, responseStatus: response.status, attemptType: 'fallback' };
-      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      sendDebugLog(logEntry);
       // #endregion
       // Fallback to local JSON file
       const fallbackResp = await fetch('/data.json', {
@@ -390,7 +405,7 @@ async function loadMusicData() {
       // #region agent log
       logEntry.message = 'Fallback fetch completed';
       logEntry.data = { ...logEntry.data, fallbackOk: fallbackResp.ok, fallbackStatus: fallbackResp.status };
-      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      sendDebugLog(logEntry);
       // #endregion
       if (!fallbackResp.ok) throw new Error('Failed to load fallback data.json');
       const jsonTracks = await fallbackResp.json();
@@ -425,7 +440,7 @@ async function loadMusicData() {
     // #region agent log
     logEntry.message = 'loadMusicData catch block';
     logEntry.data = { ...logEntry.data, errorType: err.constructor.name, errorMessage: err.message, errorName: err.name, willTryFallback: err.message === 'API_FETCH_FAILED' };
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+    sendDebugLog(logEntry);
     // #endregion
     
     // If API fetch failed, try fallback to data.json
@@ -433,7 +448,7 @@ async function loadMusicData() {
       // #region agent log
       logEntry.message = 'Attempting data.json fallback after API failure';
       logEntry.data = { ...logEntry.data, attemptType: 'fallback-after-error' };
-      fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+      sendDebugLog(logEntry);
       // #endregion
       try {
         const fallbackResp = await fetch('/data.json', {
@@ -443,7 +458,7 @@ async function loadMusicData() {
         // #region agent log
         logEntry.message = 'Fallback fetch after error completed';
         logEntry.data = { ...logEntry.data, fallbackOk: fallbackResp.ok, fallbackStatus: fallbackResp.status };
-        fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+        sendDebugLog(logEntry);
         // #endregion
         if (fallbackResp.ok) {
           const jsonTracks = await fallbackResp.json();
@@ -475,7 +490,7 @@ async function loadMusicData() {
             // #region agent log
             logEntry.message = 'Fallback data loaded successfully';
             logEntry.data = { ...logEntry.data, tracksLoaded: allTracks.length };
-            fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+            sendDebugLog(logEntry);
             // #endregion
             return; // Success - exit early
           }
@@ -484,7 +499,7 @@ async function loadMusicData() {
         // #region agent log
         logEntry.message = 'Fallback also failed';
         logEntry.data = { ...logEntry.data, fallbackError: fallbackErr.message, isFileProtocol: typeof window !== 'undefined' && window.location.protocol === 'file:' };
-        fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logEntry)}).catch(()=>{});
+        sendDebugLog(logEntry);
         // #endregion
         
         // If using file:// protocol, show helpful message
@@ -639,13 +654,13 @@ async function checkSyncStatus() {
       runId: 'run1',
       hypothesisId: 'B'
     };
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(syncLog)}).catch(()=>{});
+    sendDebugLog(syncLog);
     // #endregion
     const response = await fetch(`${API_URL}/api/refresh/status`);
     // #region agent log
     syncLog.message = 'checkSyncStatus fetch completed';
     syncLog.data = { ...syncLog.data, responseOk: response.ok, responseStatus: response.status };
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(syncLog)}).catch(()=>{});
+    sendDebugLog(syncLog);
     // #endregion
     if (response.ok) {
       const status = await response.json();
@@ -669,7 +684,7 @@ async function checkSyncStatus() {
       runId: 'run1',
       hypothesisId: 'B'
     };
-    fetch('http://127.0.0.1:7245/ingest/27fe6dd9-bbac-4320-94a1-d9eb01d3f998',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(syncLog)}).catch(()=>{});
+    sendDebugLog(syncLog);
     // #endregion
     console.warn('Could not check sync status:', error);
   }

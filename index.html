@@ -8,8 +8,8 @@
   <!-- Note: 'unsafe-inline' is required for inline scripts/styles in this implementation -->
   <!-- For production, consider using nonces or moving all scripts/styles to external files -->
   <!-- Note: frame-ancestors directive is ignored in meta tags and must be set via HTTP headers -->
-  <!-- Debug logging endpoint temporarily allowed for debugging -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 http://127.0.0.1:7245 https://*.onrender.com https://api.spatialselects.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
+  <!-- Extend connect-src locally if you add a custom debug logging endpoint -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com https://api.spatialselects.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
 
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>SpatialSelects.com - Latest Spatial Audio Releases</title>

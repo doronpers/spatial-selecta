@@ -639,10 +639,11 @@ async def rate_track(
     avg_score = db.query(func.avg(CommunityRating.immersiveness_score)).filter(CommunityRating.track_id == track_id).scalar()
     fake_count = db.query(CommunityRating).filter(CommunityRating.track_id == track_id, CommunityRating.is_fake_atmos).count()
     total = db.query(CommunityRating).filter(CommunityRating.track_id == track_id).count()
+    avg_value = float(avg_score) if avg_score is not None else 0.0
 
     # Update track cache via SQLAlchemy's update method since direct attribute assignment to Column[Unknown] is not allowed.
     update_data = {}
-    update_data['avg_immersiveness'] = float(avg_score) if avg_score else 0.0
+    update_data['avg_immersiveness'] = avg_value
 
     # Determine hall of shame threshold (e.g., >30% fake reports with >5 votes)
     if total > 5 and (fake_count / total) > 0.3:
@@ -655,7 +656,7 @@ async def rate_track(
     
     return {
         "track_id": track_id,
-        "avg_immersiveness": track.avg_immersiveness,
+        "avg_immersiveness": avg_value,
         "is_fake_atmos_ratio": fake_count / total if total > 0 else 0.0
     }
 

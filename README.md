@@ -47,34 +47,26 @@ npm start
 
 The website will be available at `http://localhost:8080`
 
-### Debug logging (optional)
-
-Client-side debug beacons are disabled by default for privacy and security. If you need structured browser logs while debugging locally, set `window.DEBUG_LOG_ENDPOINT` in the console before loading the page to point to your own HTTPS endpoint and ensure the CSP allows that host.
-
 ## Production Deployment
 
-**Quick Deploy to Render.com + GoDaddy Domain:**
+**Quick Deploy to Render.com:**
 
 1. **Prerequisites:**
-   - Get Apple Music Developer Token ([instructions](GODADDY_DOMAIN_SETUP.md#apple-music-api-token-setup))
+   - Get Apple Music Developer Token (see [docs/SETUP.md](docs/SETUP.md) for instructions)
    - Render.com account
-   - GoDaddy DNS access
+   - Optional: Custom domain for production use
 
 2. **Deploy:**  
-   See [Quick Start Guide](DEPLOYMENT_QUICKSTART.md) for step-by-step instructions
-
-3. **Full Documentation:**  
-   [Complete GoDaddy + Render Setup Guide](GODADDY_DOMAIN_SETUP.md)
+   See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for step-by-step deployment instructions
 
 **TL;DR:**
 
 ```bash
 # 1. Deploy to Render using Blueprint (connect GitHub repo)
 # 2. Add APPLE_MUSIC_DEVELOPER_TOKEN to Render environment
-# 3. Add custom domains in Render: spatialselects.com + www
-# 4. Update GoDaddy DNS with A and CNAME records from Render
-# 5. Wait 10-30 minutes for DNS propagation
-# 6. Visit https://spatialselects.com ✅
+# 3. Optional: Add custom domain in Render dashboard
+# 4. Optional: Update DNS records to point to Render
+# 5. Visit your site URL ✅
 ```
 
 ## Project Structure
@@ -100,7 +92,7 @@ spatialselects/
 
 ## Adding New Releases
 
-**IMPORTANT**: All new tracks must follow the standardized format documented in [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md).
+**IMPORTANT**: All new tracks must follow the standardized format documented in [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
 
 To add new spatial audio releases, edit the `data.json` file with the following structure:
 
@@ -121,12 +113,12 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 
 **Key Requirements**:
 
-- `musicLink` must be a valid Apple Music URL with correct IDs (see [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md))
+- `musicLink` must be a valid Apple Music URL with correct IDs (see [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md))
 - `releaseDate` is the original song release date
 - `atmosReleaseDate` is when the Dolby Atmos mix became available
 - Both dates must be in YYYY-MM-DD format
 
-For detailed instructions on finding correct Apple Music links and Atmos release dates, see [TRACK_DATA_FORMAT.md](TRACK_DATA_FORMAT.md).
+For detailed instructions on finding correct Apple Music links and Atmos release dates, see [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
 
 ### Supported Formats
 
@@ -155,7 +147,7 @@ SpatialSelects.com includes a Python backend that automatically detects and trac
 ### Backend Setup
 
 **🚀 Deploy to Production (Recommended):**
-See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for easy deployment to Render.com (10 minutes, $7/month)
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for deployment instructions to Render.com
 
 **Local Development:**
 See [backend/README.md](backend/README.md) for detailed setup instructions.

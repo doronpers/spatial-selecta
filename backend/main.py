@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 import logging
 import os
 import time
-import secrets
 import hmac
 import hashlib
 
@@ -273,6 +272,8 @@ async def startup_event():
             logger.warning("SECURITY WARNING: REFRESH_API_TOKEN not set in production")
         if not ALLOWED_ORIGINS_ENV or ALLOWED_ORIGINS_ENV == "*":
             logger.warning("SECURITY WARNING: CORS allows all origins in production")
+        if os.getenv("RATING_IP_SALT", "default-salt-change-in-production") == "default-salt-change-in-production":
+            logger.warning("SECURITY WARNING: Using default RATING_IP_SALT in production - set a secure random value")
 
 
 @app.get("/")
@@ -621,6 +622,8 @@ async def rate_track(
         
     # Create simple IP hash with consistent salt from environment
     # This allows detecting duplicate votes from same IP while maintaining privacy
+    # WARNING: A secure random salt should be set via RATING_IP_SALT environment variable
+    # in production (startup warning will alert if using default)
     salt = os.getenv("RATING_IP_SALT", "default-salt-change-in-production")
     ip_hash = hashlib.sha256(f"{client_ip}{salt}".encode()).hexdigest()
     

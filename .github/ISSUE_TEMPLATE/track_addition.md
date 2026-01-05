@@ -22,7 +22,7 @@ assignees: ''
 ## Links
 
 **Music Platform Link:** 
-<!-- For Apple Music, must include track ID: https://music.apple.com/us/album/name/ALBUM_ID?i=TRACK_ID -->
+<!-- For Apple Music, must include track ID: https://music.apple.com/us/album/album-name/ALBUM_ID?i=TRACK_ID -->
 
 ## Additional Information
 

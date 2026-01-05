@@ -65,7 +65,7 @@ Fixes #(issue number)
 
 <!-- Complete this section only if adding new tracks to data.json -->
 
-- [ ] Track data follows the format in [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md)
+- [ ] Track data follows the format in [../../docs/DATA_FORMAT.md](../../docs/DATA_FORMAT.md)
 - [ ] Release date is in YYYY-MM-DD format
 - [ ] Atmos release date is in YYYY-MM-DD format
 - [ ] Apple Music link includes track ID (`?i=` parameter)

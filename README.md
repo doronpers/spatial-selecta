@@ -47,10 +47,6 @@ npm start
 
 The website will be available at `http://localhost:8080`
 
-### Debug logging (optional)
-
-Client-side debug beacons are disabled by default for privacy and security. If you need structured browser logs while debugging locally, set `window.DEBUG_LOG_ENDPOINT` in the console before loading the page to point to your own HTTPS endpoint and ensure the CSP allows that host.
-
 ## Production Deployment
 
 **Quick Deploy to Render.com + GoDaddy Domain:**

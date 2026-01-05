@@ -52,7 +52,7 @@ We welcome code contributions for:
 
 ### Prerequisites
 
-- **Node.js** (v14 or higher)
+- **Node.js** (v16 or higher) - v14 has reached end-of-life
 - **Python** 3.9+ (for backend)
 - **Git** for version control
 

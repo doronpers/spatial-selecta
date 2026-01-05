@@ -622,6 +622,8 @@ async def rate_track(
         
     # Create simple IP hash with consistent salt from environment
     # This allows detecting duplicate votes from same IP while maintaining privacy
+    # WARNING: A secure random salt should be set via RATING_IP_SALT environment variable
+    # in production (startup warning will alert if using default)
     salt = os.getenv("RATING_IP_SALT", "default-salt-change-in-production")
     ip_hash = hashlib.sha256(f"{client_ip}{salt}".encode()).hexdigest()
     

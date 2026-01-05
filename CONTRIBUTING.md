@@ -14,13 +14,13 @@ Thank you for your interest in contributing to SpatialSelects.com! This document
 
 ## Code of Conduct
 
-This project welcomes contributions from everyone. We expect all contributors to be respectful and constructive in their interactions.
+This project adheres to a Code of Conduct that all contributors are expected to follow. Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) to understand the standards of behavior we expect in our community.
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
-If you find a bug, please open an issue with:
+If you find a bug, please [open a bug report issue](../../issues/new?template=bug_report.md) with:
 - A clear, descriptive title
 - Steps to reproduce the issue
 - Expected behavior
@@ -30,14 +30,16 @@ If you find a bug, please open an issue with:
 
 ### Suggesting Enhancements
 
-We welcome feature suggestions! Please open an issue with:
+We welcome feature suggestions! Please [open a feature request](../../issues/new?template=feature_request.md) with:
 - A clear description of the feature
 - Why this feature would be useful
 - Any implementation ideas you have
 
 ### Adding Spatial Audio Tracks
 
-One of the most valuable contributions is adding new spatial audio releases! See the [Adding New Tracks](#adding-new-tracks) section below.
+One of the most valuable contributions is adding new spatial audio releases! You can:
+- [Submit a track addition request](../../issues/new?template=track_addition.md) if you'd like us to add it
+- Or see the [Adding New Tracks](#adding-new-tracks) section below to add it yourself via PR
 
 ### Code Contributions
 

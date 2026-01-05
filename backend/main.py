@@ -272,6 +272,8 @@ async def startup_event():
             logger.warning("SECURITY WARNING: REFRESH_API_TOKEN not set in production")
         if not ALLOWED_ORIGINS_ENV or ALLOWED_ORIGINS_ENV == "*":
             logger.warning("SECURITY WARNING: CORS allows all origins in production")
+        if os.getenv("RATING_IP_SALT", "default-salt-change-in-production") == "default-salt-change-in-production":
+            logger.warning("SECURITY WARNING: Using default RATING_IP_SALT in production - set a secure random value")
 
 
 @app.get("/")

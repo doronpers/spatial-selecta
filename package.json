@@ -13,10 +13,20 @@
     "spatial-audio",
     "dolby-atmos",
     "apple-music",
-    "immersive-audio"
+    "immersive-audio",
+    "360-reality-audio",
+    "music-discovery"
   ],
-  "author": "",
+  "author": "SpatialSelects.com",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doronpers/spatial-selecta.git"
+  },
+  "bugs": {
+    "url": "https://github.com/doronpers/spatial-selecta/issues"
+  },
+  "homepage": "https://spatialselects.com",
   "devDependencies": {
     "http-server": "^14.1.1"
   }

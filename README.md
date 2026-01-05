@@ -19,7 +19,7 @@ A website that automatically tracks and displays the latest music releases avail
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v16 or higher)
 - npm or yarn
 
 ### Installation

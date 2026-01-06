@@ -147,13 +147,68 @@ def _cleanup_rate_limit_store():
 # Rate limiting function
 def check_rate_limit(client_ip: str) -> bool:
     """
-    Check if client has exceeded rate limit.
-    
+    Check if client has exceeded the rate limit for API requests.
+
+    This function implements a sliding window rate limiting algorithm to prevent
+    API abuse and ensure fair resource allocation. It tracks request timestamps
+    per IP address and enforces configurable limits.
+
+    **Algorithm:**
+    - Sliding window: Tracks all requests within the configured time window
+    - Per-IP tracking: Each IP address has independent rate limits
+    - Automatic cleanup: Removes expired entries to prevent memory leaks
+    - Configurable limits: Via RATE_LIMIT_WINDOW and RATE_LIMIT_MAX_REQUESTS env vars
+
+    **Default Limits:**
+    - Window: 60 seconds (configurable via RATE_LIMIT_WINDOW)
+    - Max requests: 100 per window (configurable via RATE_LIMIT_MAX_REQUESTS)
+    - Max tracked IPs: 10,000 (hard limit to prevent DoS)
+
+    **Memory Management:**
+    - Periodic cleanup every 5 minutes (CLEANUP_INTERVAL)
+    - Aggressive cleanup when store exceeds 10,000 IPs
+    - Keeps only 5,000 most recent IPs when limit exceeded
+    - Removes all expired request timestamps
+
+    **Security Considerations:**
+    - IP-based tracking (can be bypassed by distributed attackers)
+    - In-memory storage (resets on server restart)
+    - Not suitable for multi-instance deployments without shared storage
+    - Consider Redis or database-backed storage for production scaling
+
+    **Thread Safety:**
+    - WARNING: Not thread-safe in current implementation
+    - Use with single-threaded ASGI server or add locking for multi-threaded
+
+    **Rate Limit Exceeded Behavior:**
+    - Logs warning with truncated IP (first 8 chars for privacy)
+    - Returns False to indicate limit exceeded
+    - Caller should return HTTP 429 (Too Many Requests)
+
     Args:
-        client_ip: Client IP address
-        
+        client_ip (str): Client IP address to check. Should be validated/sanitized
+                        by get_client_ip() before passing here.
+
     Returns:
-        True if within limit, False if exceeded
+        bool: True if client is within rate limit (request allowed),
+              False if limit exceeded (request should be rejected)
+
+    Raises:
+        None: This function never raises exceptions, always returns bool
+
+    Example:
+        >>> if not check_rate_limit("192.168.1.1"):
+        ...     raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        >>> # Process request
+
+    See Also:
+        - get_client_ip(): Extracts and validates client IP from request
+        - _cleanup_rate_limit_store(): Periodic cleanup of expired entries
+
+    Performance:
+        - O(n) where n = number of requests in window for this IP
+        - Cleanup is O(m) where m = total number of tracked IPs
+        - Typical case: O(1) for checking single IP
     """
     # Prevent rate limit store from growing unbounded
     if len(rate_limit_store) > 10000:  # Max 10k unique IPs
@@ -198,8 +253,113 @@ def check_rate_limit(client_ip: str) -> bool:
 
 def get_client_ip(request: Request) -> str:
     """
-    Extract client IP from request.
-    Handles various proxy headers securely.
+    Extract and validate client IP address from HTTP request headers.
+
+    This function implements secure IP extraction with support for reverse proxies
+    and load balancers. It follows security best practices to prevent IP spoofing
+    while properly handling common proxy configurations.
+
+    **Header Priority Order:**
+    1. **X-Real-IP** (most trusted)
+       - Typically set by reverse proxies (nginx, Apache, etc.)
+       - Single IP value, harder to spoof
+       - Validated for IPv4 format
+       - Example: `X-Real-IP: 203.0.113.42`
+
+    2. **X-Forwarded-For** (conditional trust)
+       - Only trusted if TRUST_PROXY env var is set to "true"
+       - Takes FIRST IP in chain (original client)
+       - Can be spoofed, hence conditional trust
+       - Example: `X-Forwarded-For: 203.0.113.42, 198.51.100.17`
+
+    3. **Direct Connection IP** (fallback)
+       - From request.client.host
+       - Most reliable but doesn't work behind proxies
+       - Used when no proxy headers present
+
+    **Security Considerations:**
+
+    *IP Spoofing Prevention:*
+    - X-Real-IP is validated with basic IPv4 format check
+    - X-Forwarded-For only trusted when explicitly configured via TRUST_PROXY
+    - Takes first IP from X-Forwarded-For chain (original client, not proxy)
+    - Rejects malformed IPs or suspicious values (e.g., "unknown")
+
+    *Privacy & Logging:*
+    - Returns "unknown" if no valid IP found (never fails)
+    - Logs should truncate IPs to first 8 chars for privacy
+    - Consider GDPR implications of IP storage
+
+    *Proxy Configuration:*
+    - Set TRUST_PROXY=true only when behind trusted reverse proxy
+    - Do NOT enable TRUST_PROXY if directly exposed to internet
+    - Misconfigured TRUST_PROXY allows IP spoofing attacks
+
+    **IPv4 Validation:**
+    - Splits IP into 4 octets
+    - Validates each octet is numeric and in range 0-255
+    - Rejects invalid formats (IPv6 not currently supported)
+
+    **Environment Variables:**
+    - `TRUST_PROXY` (default: "false")
+      - Set to "true" when behind nginx, HAProxy, CloudFlare, etc.
+      - Leave "false" when directly exposed to internet
+
+    **Edge Cases Handled:**
+    - Missing headers → fallback to direct IP
+    - Malformed headers → skip to next priority
+    - Multiple proxies → takes original client IP
+    - No request.client → returns "unknown"
+    - IPv6 addresses → treated as invalid (returns next priority)
+
+    **Deployment Scenarios:**
+
+    *Direct Deployment (no proxy):*
+    - TRUST_PROXY=false
+    - Uses request.client.host
+    - Most secure, no spoofing risk
+
+    *Behind nginx/Apache:*
+    - TRUST_PROXY=true
+    - Reads X-Real-IP or X-Forwarded-For
+    - Requires proper proxy configuration
+
+    *Behind CloudFlare/CDN:*
+    - TRUST_PROXY=true
+    - Reads CF-Connecting-IP (if configured) or X-Forwarded-For
+    - Consider CloudFlare-specific headers
+
+    Args:
+        request (Request): FastAPI/Starlette Request object containing HTTP headers
+                          and client connection information.
+
+    Returns:
+        str: Client IP address as string in IPv4 format (e.g., "203.0.113.42"),
+             or "unknown" if IP cannot be determined.
+
+    Examples:
+        >>> # Direct connection (no proxy)
+        >>> get_client_ip(request)  # Returns "192.168.1.100"
+
+        >>> # Behind nginx with X-Real-IP
+        >>> request.headers["X-Real-IP"] = "203.0.113.42"
+        >>> get_client_ip(request)  # Returns "203.0.113.42"
+
+        >>> # Behind proxy with X-Forwarded-For
+        >>> os.environ["TRUST_PROXY"] = "true"
+        >>> request.headers["X-Forwarded-For"] = "203.0.113.42, 198.51.100.17"
+        >>> get_client_ip(request)  # Returns "203.0.113.42"
+
+    Security Warnings:
+        - Do NOT enable TRUST_PROXY on internet-facing servers without reverse proxy
+        - IP spoofing possible if TRUST_PROXY enabled without actual proxy
+        - Rate limiting based on IP can be bypassed with distributed attacks
+        - Consider additional authentication for sensitive operations
+
+    See Also:
+        - check_rate_limit(): Uses this function for rate limiting by IP
+        - RFC 7239: Forwarded HTTP Extension (modern alternative to X-Forwarded-For)
+        - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
     """
     # Priority order for IP extraction (most trusted first)
     # X-Real-IP is typically set by reverse proxies (nginx, etc.)
@@ -490,10 +650,107 @@ PUBLIC_REFRESH_COOLDOWN = 3600  # 1 hour in seconds
 
 def check_public_refresh_limit(client_ip: str) -> tuple[bool, int]:
     """
-    Check if client can trigger a public refresh.
+    Check if client can trigger a public data refresh from Apple Music API.
+
+    This function implements strict rate limiting for the public refresh endpoint
+    to prevent API quota exhaustion and ensure fair access. Unlike general API
+    rate limiting, this enforces a much longer cooldown period per IP address.
+
+    **Purpose:**
+    The public refresh endpoint (`/api/refresh/sync`) allows website visitors to
+    manually trigger data synchronization with Apple Music without authentication.
+    This is user-friendly but must be heavily rate-limited to prevent:
+    - Apple Music API quota exhaustion
+    - Excessive backend load from frequent refreshes
+    - Malicious triggering of expensive operations
+
+    **Rate Limit:**
+    - **Cooldown:** 1 hour (3600 seconds) between refreshes per IP
+    - **Scope:** Per IP address (not global)
+    - **Storage:** In-memory (resets on server restart)
+    - **Bypass:** Use authenticated `/api/refresh` endpoint for admin access
+
+    **Algorithm:**
+    1. Check if IP has previous refresh timestamp in store
+    2. Calculate elapsed time since last refresh
+    3. If elapsed < cooldown, return (False, seconds_remaining)
+    4. If elapsed >= cooldown or no previous refresh, return (True, 0)
+
+    **Storage Characteristics:**
+    - **Type:** In-memory dictionary (public_refresh_store)
+    - **Persistence:** Lost on server restart (acceptable trade-off)
+    - **Cleanup:** No automatic cleanup (acceptable for low refresh volume)
+    - **Scaling:** Not shared across multiple server instances
+
+    **Multi-Instance Deployment:**
+    For production deployments with multiple server instances:
+    - Current implementation is NOT shared across instances
+    - Each instance has independent rate limit tracking
+    - Users could bypass limit by hitting different instances
+    - Solution: Use Redis or database-backed storage for shared state
+
+    **Security Implications:**
+    - IP-based limiting can be bypassed by:
+      - Distributed attacks from multiple IPs
+      - VPN/proxy rotation
+      - Mobile networks (dynamic IPs)
+    - Consider additional protection:
+      - CAPTCHA for human verification
+      - Authentication requirement for frequent users
+      - CloudFlare rate limiting at CDN level
+
+    **Comparison with General Rate Limiting:**
+    - General API: 100 requests/minute per IP (check_rate_limit)
+    - Public refresh: 1 request/hour per IP (this function)
+    - Authenticated refresh: No rate limit (trust model)
+
+    **User Experience:**
+    When limit is exceeded:
+    - HTTP 429 (Too Many Requests) response
+    - Headers include Retry-After with seconds until available
+    - Frontend displays countdown: "Available in X minutes"
+    - Alternative: Use authenticated endpoint if available
+
+    Args:
+        client_ip (str): Client IP address to check. Should be extracted and
+                        validated by get_client_ip() before passing here.
 
     Returns:
-        Tuple of (allowed, seconds_remaining)
+        tuple[bool, int]: A tuple containing:
+            - allowed (bool): True if client can refresh now, False if in cooldown
+            - seconds_remaining (int): Seconds until next refresh allowed (0 if allowed now)
+
+    Examples:
+        >>> # First refresh from IP
+        >>> allowed, remaining = check_public_refresh_limit("203.0.113.42")
+        >>> print(allowed, remaining)
+        True 0
+
+        >>> # Immediate second attempt (within cooldown)
+        >>> allowed, remaining = check_public_refresh_limit("203.0.113.42")
+        >>> print(allowed, remaining)
+        False 3598  # ~1 hour remaining
+
+        >>> # Check remaining time
+        >>> allowed, remaining = check_public_refresh_limit("203.0.113.42")
+        >>> if not allowed:
+        ...     print(f"Try again in {remaining // 60} minutes")
+
+    Implementation Notes:
+        - Uses time.time() for Unix timestamp tracking
+        - Integer arithmetic for second calculations
+        - No exception handling (assumes valid inputs)
+        - Thread-safe for single-threaded ASGI (not multi-threaded)
+
+    Configuration:
+        - PUBLIC_REFRESH_COOLDOWN: Global constant (3600 seconds)
+        - Modify constant to change cooldown period
+        - Consider making environment variable for production flexibility
+
+    See Also:
+        - public_refresh_data(): Endpoint that uses this function
+        - check_rate_limit(): General API rate limiting
+        - get_refresh_status(): Returns current cooldown status to frontend
     """
     current_time = time.time()
 

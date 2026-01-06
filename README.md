@@ -21,6 +21,18 @@ A website that automatically tracks and displays the latest music releases avail
 
 - Node.js (v16 or higher)
 - npm or yarn
+- Python 3.9+
+- pytest (for testing)
+
+### Design Philosophy
+
+**"Good design is as little design as possible." - Dieter Rams**
+
+This project adheres to a strict minimalist design system:
+- **Honesty**: No decorative elements that don't serve a function.
+- **Unobtrusive**: Content comes first; UI frames it.
+- **Thorough**: precise execution of details (typography, spacing).
+- **Environmentally Friendly**: Efficient code, minimal bandwidth usage.
 
 ### Installation
 
@@ -150,7 +162,7 @@ SpatialSelects.com includes a Python backend that automatically detects and trac
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for deployment instructions to Render.com
 
 **Local Development:**
-See [backend/README.md](backend/README.md) for detailed setup instructions.
+See [Setup Guide](docs/SETUP.md) for detailed setup instructions.
 
 **Quick start:**
 
@@ -175,6 +187,14 @@ uvicorn backend.main:app --reload --port 8000
 ```
 
 1. Access API documentation at `http://localhost:8000/docs`
+
+### Testing
+
+Run the automated test suite to ensure backend stability:
+
+```bash
+pytest tests/
+```
 
 ### API Endpoints
 

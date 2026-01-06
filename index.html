@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,17 @@
   <!-- Content Security Policy -->
   <!-- Note: 'unsafe-inline' is required for inline scripts/styles in this implementation -->
   <!-- For production, consider using nonces or moving all scripts/styles to external files -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com https://api.spatialselects.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
+  <!-- Note: frame-ancestors directive is ignored in meta tags and must be set via HTTP headers -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:8000 https://*.onrender.com https://api.spatialselects.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
 
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>SpatialSelects.com - Latest Spatial Audio Releases</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <header>
     <div class="container">
@@ -38,8 +43,8 @@
   <main class="container">
     <!-- Releases View -->
     <div id="releasesView" class="view-section active">
-      <div id="error-banner" style="display: none; background: #c62828; color: white; padding: 1rem; margin-bottom: 1rem; text-align: center;"></div>
-      <div id="loading-spinner" style="display: none; text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</div>
+      <div id="error-banner" class="error-banner hidden"></div>
+      <div id="loading-spinner" class="loading-spinner hidden">Loading...</div>
 
       <section class="filters">
         <div class="filter-group">
@@ -65,7 +70,8 @@
         </div>
 
         <div class="filter-group">
-          <button id="syncButton" class="sync-btn" title="Fetch latest tracks from Apple Music (rate limited to once per hour)">Sync New Tracks</button>
+          <button id="syncButton" class="sync-btn"
+            title="Fetch latest tracks from Apple Music (rate limited to once per hour)">Sync New Tracks</button>
         </div>
       </section>
 
@@ -91,4 +97,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>

@@ -351,7 +351,6 @@ def import_existing_data_json(db: Session, data_json_path: str = "data.json"):
         db: Database session
         data_json_path: Path to data.json file
     """
-    import json
     
     try:
         with open(data_json_path, 'r') as f:

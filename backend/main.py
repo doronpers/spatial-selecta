@@ -9,7 +9,7 @@ from starlette.responses import Response
 from starlette.requests import Request as StarletteRequest
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from datetime import datetime, timedelta
 import logging
 import os
@@ -34,6 +34,10 @@ app = FastAPI(
     docs_url="/docs" if not os.getenv("ENVIRONMENT") == "production" else None,
     redoc_url="/redoc" if not os.getenv("ENVIRONMENT") == "production" else None,
 )
+
+# Request size limits (prevent DoS via large payloads)
+# Must be defined before SecurityHeadersMiddleware uses it
+MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -111,9 +115,6 @@ RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
 RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "100"))  # per window per IP
 _last_cleanup_time = time.time()
 CLEANUP_INTERVAL = 300  # Clean up old entries every 5 minutes
-
-# Request size limits (prevent DoS via large payloads)
-MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
 
 
 def _cleanup_rate_limit_store():
@@ -648,7 +649,7 @@ public_refresh_store = {}
 PUBLIC_REFRESH_COOLDOWN = 3600  # 1 hour in seconds
 
 
-def check_public_refresh_limit(client_ip: str) -> tuple[bool, int]:
+def check_public_refresh_limit(client_ip: str) -> Tuple[bool, int]:
     """
     Check if client can trigger a public data refresh from Apple Music API.
 

@@ -1,7 +1,6 @@
 // app.js
 
 // Configuration
-
 /**
  * Determines the appropriate API URL based on the current environment.
  *
@@ -88,7 +87,7 @@ const determineApiUrl = () => {
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
     const isNotHttps = protocol !== 'https:';
     const isNotProductionDomain = !hostname.includes('spatialselects.com') &&
-                                  !hostname.includes('onrender.com');
+      !hostname.includes('onrender.com');
 
     // Use localhost API if: file://, localhost, empty hostname (file://), or not HTTPS and not production domain
     if (isFileProtocol || isLocalhost || (isNotHttps && isNotProductionDomain)) {
@@ -149,21 +148,21 @@ function isValidDateFormat(dateStr) {
   // null/undefined is valid (optional field), but empty string is not
   if (dateStr == null) return true;
   if (dateStr === '') return false;
-  
+
   // Check format: YYYY-MM-DD
   if (!DATE_FORMAT_REGEX.test(dateStr)) return false;
-  
+
   // Parse components and create UTC date for timezone-consistent validation
   const [year, month, day] = dateStr.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
-  
+
   if (isNaN(date.getTime())) return false;
-  
+
   // Verify the date components match using UTC methods
   // (prevents dates like 2023-02-30 from being auto-adjusted to 2023-03-02)
   return date.getUTCFullYear() === year &&
-         date.getUTCMonth() === month - 1 &&
-         date.getUTCDate() === day;
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day;
 }
 
 /**
@@ -278,7 +277,7 @@ function renderTracks() {
     const shameFlag = track.hallOfShame ? '<span class="hall-of-shame-badge">⚠ Fake Atmos</span>' : '';
 
     // Check if new release (within last 30 days)
-    const isNew = atmosDate && !isNaN(atmosDate.getTime()) && 
+    const isNew = atmosDate && !isNaN(atmosDate.getTime()) &&
       (Date.now() - atmosDate.getTime()) < (30 * 24 * 60 * 60 * 1000);
     const newBadge = isNew ? '<span class="new-badge">New</span>' : '';
 
@@ -304,13 +303,47 @@ function renderTracks() {
 }
 
 /**
+ * Transform track data from API format to frontend format.
+ * Handles both snake_case (API) and camelCase (data.json) formats.
+ */
+function transformTrack(track) {
+  return {
+    id: track.id,
+    title: track.title,
+    artist: track.artist,
+    album: track.album,
+    format: track.format,
+    platform: track.platform,
+    releaseDate: track.releaseDate || track.release_date,
+    atmosReleaseDate: track.atmosReleaseDate || track.atmos_release_date || track.releaseDate || track.release_date,
+    albumArt: track.albumArt || track.album_art || '🎵',
+    musicLink: track.musicLink || track.music_link || null,
+    credits: Array.isArray(track.credits) ? track.credits : [],
+    avgImmersiveness: track.avgImmersiveness ?? track.avg_immersiveness,
+    hallOfShame: track.hallOfShame ?? track.hall_of_shame
+  };
+}
+
+/**
+ * Sort tracks by Atmos release date (newest first), fallback to releaseDate.
+ */
+function sortTracksByDate(tracks) {
+  return tracks.sort((a, b) => {
+    const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
+    const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
+    const timeA = isNaN(dateA.getTime()) ? -Infinity : dateA.getTime();
+    const timeB = isNaN(dateB.getTime()) ? -Infinity : dateB.getTime();
+    return timeB - timeA; // newest first
+  });
+}
+
+/**
  * Load music data from API or fallback to JSON file.
- * Merges both branches: keeps Atmos-aware fields/sorting and metadata (credits, avgImmersiveness, hallOfShame).
  */
 async function loadMusicData() {
   try {
-    // Optional: show loading indicator
-    if (domCache.loadingSpinner) domCache.loadingSpinner.style.display = 'block';
+    // Show loading indicator
+    if (domCache.loadingSpinner) domCache.loadingSpinner.classList.remove('hidden');
 
     // Build API URL with filter parameters
     const params = new URLSearchParams();
@@ -345,41 +378,17 @@ async function loadMusicData() {
         throw new Error('Invalid data format: expected array');
       }
 
-      // Transform API response to match frontend format and validate
-      allTracks = apiTracks.map(track => ({
-        id: track.id,
-        title: track.title,
-        artist: track.artist,
-        album: track.album,
-        format: track.format,
-        platform: track.platform,
-        // Canonical release date from API
-        releaseDate: track.release_date,
-        // Prefer explicit atmos_release_date, fall back to general release_date
-        atmosReleaseDate: track.atmos_release_date || track.release_date,
-        // Frontend extras from both branches
-        albumArt: track.album_art || '🎵',
-        musicLink: track.music_link || null,
-        credits: Array.isArray(track.credits) ? track.credits : [],
-        avgImmersiveness: track.avg_immersiveness,
-        hallOfShame: track.hall_of_shame
-      })).filter(track => validateTrack(track));
+      // Transform and validate tracks
+      allTracks = apiTracks
+        .map(transformTrack)
+        .filter(track => validateTrack(track));
 
       if (allTracks.length === 0) {
         throw new Error('No valid tracks found in API response');
       }
 
-      // Sort by Atmos release date (newest first), fallback to releaseDate
-      allTracks.sort((a, b) => {
-        const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
-        const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
-
-        // Handle unparsable dates by pushing them to the end
-        const timeA = isNaN(dateA.getTime()) ? -Infinity : dateA.getTime();
-        const timeB = isNaN(dateB.getTime()) ? -Infinity : dateB.getTime();
-
-        return timeB - timeA; // newest first
-      });
+      // Sort by Atmos release date (newest first)
+      sortTracksByDate(allTracks);
     } else {
       // Fallback to local JSON file
       const fallbackResp = await fetch('/data.json', {
@@ -390,30 +399,13 @@ async function loadMusicData() {
       const jsonTracks = await fallbackResp.json();
       if (!Array.isArray(jsonTracks)) throw new Error('Invalid fallback format: expected array');
 
+      // Transform and validate tracks
       allTracks = jsonTracks
-        .map(track => ({
-          id: track.id,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          format: track.format,
-          platform: track.platform,
-          releaseDate: track.releaseDate || track.release_date,
-          atmosReleaseDate: track.atmosReleaseDate || track.atmos_release_date || track.releaseDate || track.release_date,
-          albumArt: track.albumArt || track.album_art || '🎵',
-          musicLink: track.musicLink || track.music_link || null,
-          credits: Array.isArray(track.credits) ? track.credits : [],
-          avgImmersiveness: track.avgImmersiveness ?? track.avg_immersiveness,
-          hallOfShame: track.hallOfShame ?? track.hall_of_shame
-        }))
-        .filter(track => validateTrack(track))
-        .sort((a, b) => {
-          const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
-          const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
-          const timeA = isNaN(dateA.getTime()) ? -Infinity : dateA.getTime();
-          const timeB = isNaN(dateB.getTime()) ? -Infinity : dateB.getTime();
-          return timeB - timeA;
-        });
+        .map(transformTrack)
+        .filter(track => validateTrack(track));
+
+      // Sort by Atmos release date (newest first)
+      sortTracksByDate(allTracks);
     }
   } catch (err) {
     // If API fetch failed, try fallback to data.json
@@ -427,29 +419,9 @@ async function loadMusicData() {
           const jsonTracks = await fallbackResp.json();
           if (Array.isArray(jsonTracks)) {
             allTracks = jsonTracks
-              .map(track => ({
-                id: track.id,
-                title: track.title,
-                artist: track.artist,
-                album: track.album,
-                format: track.format,
-                platform: track.platform,
-                releaseDate: track.releaseDate || track.release_date,
-                atmosReleaseDate: track.atmosReleaseDate || track.atmos_release_date || track.releaseDate || track.release_date,
-                albumArt: track.albumArt || track.album_art || '🎵',
-                musicLink: track.musicLink || track.music_link || null,
-                credits: Array.isArray(track.credits) ? track.credits : [],
-                avgImmersiveness: track.avgImmersiveness ?? track.avg_immersiveness,
-                hallOfShame: track.hallOfShame ?? track.hall_of_shame
-              }))
-              .filter(track => validateTrack(track))
-              .sort((a, b) => {
-                const dateA = new Date(a.atmosReleaseDate || a.releaseDate);
-                const dateB = new Date(b.atmosReleaseDate || b.releaseDate);
-                const timeA = isNaN(dateA.getTime()) ? -Infinity : dateA.getTime();
-                const timeB = isNaN(dateB.getTime()) ? -Infinity : dateB.getTime();
-                return timeB - timeA;
-              });
+              .map(transformTrack)
+              .filter(track => validateTrack(track));
+            sortTracksByDate(allTracks);
             return; // Success - exit early
           }
         }
@@ -458,13 +430,13 @@ async function loadMusicData() {
         if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
           if (domCache.errorBanner) {
             domCache.errorBanner.innerHTML = '⚠️ Using file:// protocol. Please use a local HTTP server:<br>Run: <code>python -m http.server 8080</code> or <code>npx http-server</code><br>Then open: <code>http://localhost:8080</code>';
-            domCache.errorBanner.style.display = 'block';
+            domCache.errorBanner.classList.remove('hidden');
           }
           return; // Exit early to avoid showing generic error
         }
       }
     }
-    
+
     console.error('loadMusicData error:', err);
     if (domCache.errorBanner) {
       const isFileProtocol = typeof window !== 'undefined' && window.location.protocol === 'file:';
@@ -473,10 +445,10 @@ async function loadMusicData() {
       } else {
         domCache.errorBanner.textContent = 'Failed to load tracks. Please try again later.';
       }
-      domCache.errorBanner.style.display = 'block';
+      domCache.errorBanner.classList.remove('hidden');
     }
   } finally {
-    if (domCache.loadingSpinner) domCache.loadingSpinner.style.display = 'none';
+    if (domCache.loadingSpinner) domCache.loadingSpinner.classList.add('hidden');
     // Apply filters and re-render UI
     applyFilters();
   }

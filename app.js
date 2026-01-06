@@ -1,29 +1,101 @@
 // app.js
 
 // Configuration
+
+/**
+ * Determines the appropriate API URL based on the current environment.
+ *
+ * This function implements intelligent environment detection to automatically switch
+ * between local development and production API endpoints without manual configuration.
+ *
+ * **Priority Order:**
+ * 1. Explicit override via `window.API_URL` (highest priority)
+ * 2. Local development detection (file://, localhost, non-HTTPS non-production domains)
+ * 3. Production API (default fallback)
+ *
+ * **Environment Detection Logic:**
+ * - **File Protocol (`file://`)**: Returns localhost API
+ *   - Used when opening HTML files directly in browser
+ *   - Example: `file:///Users/username/project/index.html`
+ *
+ * - **Localhost Domains**: Returns localhost API
+ *   - Detects: `localhost`, `127.0.0.1`, or empty hostname
+ *   - Example: `http://localhost:8080`, `http://127.0.0.1:3000`
+ *
+ * - **Non-HTTPS Non-Production**: Returns localhost API
+ *   - If using HTTP (not HTTPS) AND not a production domain
+ *   - Assumes local development environment
+ *   - Example: `http://192.168.1.100:8080`
+ *
+ * - **Production Domains**: Returns production API
+ *   - Detects: domains containing `spatialselects.com` or `onrender.com`
+ *   - Example: `https://spatialselects.com`, `https://app.onrender.com`
+ *
+ * **Return Values:**
+ * - `http://localhost:8000` - Local backend API (development)
+ * - `https://api.spatialselects.com` - Production API (default)
+ * - Custom URL from `window.API_URL` - Explicit override
+ *
+ * **Usage Examples:**
+ * ```javascript
+ * // Automatic detection (recommended)
+ * const API_URL = determineApiUrl();
+ *
+ * // Manual override for testing
+ * window.API_URL = 'http://staging.example.com/api';
+ * const API_URL = determineApiUrl(); // Returns 'http://staging.example.com/api'
+ * ```
+ *
+ * **Security Considerations:**
+ * - Production domains automatically use HTTPS endpoint
+ * - Local development uses HTTP for localhost convenience
+ * - Explicit overrides should only be used for debugging/testing
+ *
+ * **Browser Compatibility:**
+ * - Works in all modern browsers supporting `window.location`
+ * - Safely handles server-side rendering (checks for `window` existence)
+ * - Returns production API if `window` is undefined (SSR fallback)
+ *
+ * @returns {string} The determined API base URL (without trailing slash)
+ *
+ * @example
+ * // Development (localhost:8080)
+ * determineApiUrl() // => 'http://localhost:8000'
+ *
+ * @example
+ * // Production (https://spatialselects.com)
+ * determineApiUrl() // => 'https://api.spatialselects.com'
+ *
+ * @example
+ * // Explicit override
+ * window.API_URL = 'http://custom-api.example.com';
+ * determineApiUrl() // => 'http://custom-api.example.com'
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Location|MDN: Location API}
+ */
 const determineApiUrl = () => {
   // Allow explicit override via window.API_URL (highest priority)
   if (typeof window !== 'undefined' && window.API_URL) {
     return window.API_URL;
   }
-  
+
   // Check if running locally
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol;
     const hostname = window.location.hostname || '';
-    
+
     const isFileProtocol = protocol === 'file:';
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
     const isNotHttps = protocol !== 'https:';
-    const isNotProductionDomain = !hostname.includes('spatialselects.com') && 
+    const isNotProductionDomain = !hostname.includes('spatialselects.com') &&
                                   !hostname.includes('onrender.com');
-    
+
     // Use localhost API if: file://, localhost, empty hostname (file://), or not HTTPS and not production domain
     if (isFileProtocol || isLocalhost || (isNotHttps && isNotProductionDomain)) {
       return 'http://localhost:8000';
     }
   }
-  
+
   // Default to production API
   return 'https://api.spatialselects.com';
 };

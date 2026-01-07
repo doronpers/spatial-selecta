@@ -1,0 +1,42 @@
+# Docker Compose configuration for local development
+# Use this for development with live reload and exposed ports
+# Run with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mount backend code for live reload
+      - ./backend:/app/backend:ro
+      - ./requirements.txt:/app/requirements.txt:ro
+    environment:
+      ENVIRONMENT: development
+      # Allow all origins in development
+      ALLOWED_ORIGINS: "*"
+    # Expose port for direct access (debugging)
+    ports:
+      - "8000:8000"
+    # Override command to enable reload
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    volumes:
+      # Mount frontend files for live updates
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./styles.css:/usr/share/nginx/html/styles.css:ro
+      - ./app.js:/usr/share/nginx/html/app.js:ro
+      - ./data.json:/usr/share/nginx/html/data.json:ro
+    # Expose port for direct access (debugging)
+    ports:
+      - "8080:8080"
+
+  db:
+    # Expose database port for debugging with database tools
+    ports:
+      - "5432:5432"
+
+  nginx:
+    # Enable debug logging
+    command: ["nginx", "-g", "daemon off; error_log /var/log/nginx/error.log debug;"]

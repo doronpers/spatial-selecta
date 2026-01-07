@@ -61,6 +61,30 @@ The website will be available at `http://localhost:8080`
 
 ## Production Deployment
 
+### Option 1: Docker (Recommended)
+
+Deploy using Docker and Docker Compose with PostgreSQL, nginx, and SSL support:
+
+```bash
+# 1. Clone and configure
+git clone https://github.com/doronpers/spatial-selecta.git
+cd spatial-selecta
+cp .env.docker .env
+
+# 2. Edit .env with your Apple Music token and settings
+# 3. Generate SSL certificate (self-signed for testing)
+./docker/generate-ssl-cert.sh localhost
+
+# 4. Start all services
+docker-compose up -d
+
+# 5. Visit https://localhost ✅
+```
+
+See [docs/DOCKER.md](docs/DOCKER.md) for detailed Docker deployment instructions.
+
+### Option 2: Render.com
+
 **Quick Deploy to Render.com:**
 
 1. **Prerequisites:**

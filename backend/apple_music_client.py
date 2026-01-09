@@ -192,11 +192,14 @@ class AppleMusicClient:
                 tracks = data["relationships"]["tracks"]["data"]
                 
                 # Check for pagination - get next page if available
+                # Logic fix: Only recurse if we haven't reached the requested limit
                 next_url = data["relationships"]["tracks"].get("next")
-                if next_url and len(tracks) >= limit:
+                remaining_limit = limit - len(tracks)
+                
+                if next_url and remaining_limit > 0:
                     # Recursively get more tracks
                     more_tracks = self.get_playlist_tracks(
-                        playlist_id, storefront, limit, offset + limit
+                        playlist_id, storefront, remaining_limit, offset + len(tracks)
                     )
                     if more_tracks:
                         tracks.extend(more_tracks)

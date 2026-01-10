@@ -29,3 +29,10 @@ spatial_selecta.db
 
 # Docker
 docker/ssl/
+*.pyc
+.venv/
+.mypy_cache/
+.pytest_cache/
+*.bak.*
+.env.*.local
+coverage/

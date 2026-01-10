@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - CONTRIBUTING.md with comprehensive contribution guidelines
 - LICENSE file (MIT License)
 - CHANGELOG.md to track project changes
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-01-01
 
 ### Added
+
 - Initial release of SpatialSelects.com
 - Frontend website with responsive design
 - Track listing with filtering by platform and format
@@ -36,12 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rate limiting for public endpoints
 - Comprehensive documentation:
   - README.md with quick start guide
-  - docs/DEVELOPMENT.md for architecture and development
-  - docs/SETUP.md for detailed setup instructions
-  - docs/DEPLOYMENT.md for production deployment
-  - docs/DATA_FORMAT.md for track data specifications
-  - docs/API.md for API endpoint documentation
-  - docs/SECURITY.md for security guidelines
+  - Documentation/Guides/DEVELOPMENT.md for architecture and development
+  - Documentation/Guides/SETUP.md for detailed setup instructions
+  - Documentation/Guides/DEPLOYMENT.md for production deployment
+  - Documentation/Reference/DATA_FORMAT.md for track data specifications
+  - Documentation/Reference/API.md for API endpoint documentation
+  - Documentation/Reference/SECURITY.md for security guidelines
   - backend/README.md for backend-specific docs
 - Deployment configuration:
   - Render.com blueprint (render.yaml)
@@ -60,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile-responsive layout
 
 ### Backend Features
+
 - Apple Music API client with developer token authentication
 - Spatial audio detection via `audioVariants` attribute
 - Monitoring of curated Spatial Audio playlists
@@ -75,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refresh status checking with rate limiting
 
 ### Developer Experience
+
 - Local development with hot reload
 - Interactive API documentation at /docs
 - Clear project structure
@@ -86,16 +90,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Release Types
 
 ### Major Version (X.0.0)
+
 - Significant architectural changes
 - Breaking API changes
 - Major feature additions
 
 ### Minor Version (0.X.0)
+
 - New features
 - Enhancements to existing features
 - Non-breaking API changes
 
 ### Patch Version (0.0.X)
+
 - Bug fixes
 - Documentation updates
 - Performance improvements
@@ -104,21 +111,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Categories
 
 ### Added
+
 New features and capabilities
 
 ### Changed
+
 Changes to existing functionality
 
 ### Deprecated
+
 Features that will be removed in future releases
 
 ### Removed
+
 Features that have been removed
 
 ### Fixed
+
 Bug fixes
 
 ### Security
+
 Security improvements and vulnerability fixes
 
 ---
@@ -126,6 +139,7 @@ Security improvements and vulnerability fixes
 ## Future Roadmap
 
 Planned enhancements for future releases:
+
 - Amazon Music API integration
 - User accounts and favorites
 - Playlist creation

@@ -29,6 +29,7 @@ A website that automatically tracks and displays the latest music releases avail
 **"Good design is as little design as possible." - Dieter Rams**
 
 This project adheres to a strict minimalist design system:
+
 - **Honesty**: No decorative elements that don't serve a function.
 - **Unobtrusive**: Content comes first; UI frames it.
 - **Thorough**: precise execution of details (typography, spacing).
@@ -81,19 +82,19 @@ docker-compose up -d
 # 5. Visit https://localhost ✅
 ```
 
-See [docs/DOCKER.md](docs/DOCKER.md) for detailed Docker deployment instructions.
+See [Documentation/Guides/DOCKER.md](Documentation/Guides/DOCKER.md) for detailed Docker deployment instructions.
 
 ### Option 2: Render.com
 
 **Quick Deploy to Render.com:**
 
 1. **Prerequisites:**
-   - Get Apple Music Developer Token (see [docs/SETUP.md](docs/SETUP.md) for instructions)
+   - Get Apple Music Developer Token (see [Documentation/Guides/SETUP.md](Documentation/Guides/SETUP.md) for instructions)
    - Render.com account
    - Optional: Custom domain for production use
 
 2. **Deploy:**  
-   See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for step-by-step deployment instructions
+   See [Documentation/Guides/DEPLOYMENT.md](Documentation/Guides/DEPLOYMENT.md) for step-by-step deployment instructions
 
 **TL;DR:**
 
@@ -128,7 +129,7 @@ spatialselects/
 
 ## Adding New Releases
 
-**IMPORTANT**: All new tracks must follow the standardized format documented in [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
+**IMPORTANT**: All new tracks must follow the standardized format documented in [Documentation/Reference/DATA_FORMAT.md](Documentation/Reference/DATA_FORMAT.md).
 
 To add new spatial audio releases, edit the `data.json` file with the following structure:
 
@@ -149,12 +150,12 @@ To add new spatial audio releases, edit the `data.json` file with the following 
 
 **Key Requirements**:
 
-- `musicLink` must be a valid Apple Music URL with correct IDs (see [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md))
+- `musicLink` must be a valid Apple Music URL with correct IDs (see [Documentation/Reference/DATA_FORMAT.md](Documentation/Reference/DATA_FORMAT.md))
 - `releaseDate` is the original song release date
 - `atmosReleaseDate` is when the Dolby Atmos mix became available
 - Both dates must be in YYYY-MM-DD format
 
-For detailed instructions on finding correct Apple Music links and Atmos release dates, see [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
+For detailed instructions on finding correct Apple Music links and Atmos release dates, see [Documentation/Reference/DATA_FORMAT.md](Documentation/Reference/DATA_FORMAT.md).
 
 ### Supported Formats
 
@@ -183,10 +184,10 @@ SpatialSelects.com includes a Python backend that automatically detects and trac
 ### Backend Setup
 
 **🚀 Deploy to Production (Recommended):**
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for deployment instructions to Render.com
+See [Documentation/Guides/DEPLOYMENT.md](Documentation/Guides/DEPLOYMENT.md) for deployment instructions to Render.com
 
 **Local Development:**
-See [Setup Guide](docs/SETUP.md) for detailed setup instructions.
+See [Setup Guide](Documentation/Guides/SETUP.md) for detailed setup instructions.
 
 **Quick start:**
 
@@ -223,6 +224,7 @@ pytest tests/
 ### API Endpoints
 
 **Track Endpoints:**
+
 - `GET /api/tracks` - List all spatial audio tracks (with platform/format filtering, pagination)
   - Query parameters: `platform`, `format`, `limit`, `offset`
 - `GET /api/tracks/new` - Get recently released tracks (default: last 30 days)
@@ -230,24 +232,29 @@ pytest tests/
 - `GET /api/tracks/{track_id}` - Get specific track by ID
 
 **Refresh Endpoints:**
+
 - `POST /api/refresh` - Manually trigger data refresh (requires authentication token)
 - `POST /api/refresh/sync` - Public endpoint to trigger refresh (rate limited: 1 per hour per IP)
 - `GET /api/refresh/status` - Check if public refresh is available
 
 **Community Endpoints:**
+
 - `POST /api/tracks/{track_id}/rate` - Submit community rating for a track
   - Body: `{"score": 1-10, "is_fake": boolean}`
 
 **Engineer Endpoints:**
+
 - `GET /api/engineers` - List engineers sorted by mix count
   - Query parameters: `limit`, `min_mixes`
 - `GET /api/engineers/{engineer_id}` - Get engineer details
 
 **Utility Endpoints:**
+
 - `GET /api/stats` - Get database statistics
 - `GET /api/health` - Health check endpoint
 
 **Authentication:**
+
 - Protected endpoints require `Authorization: Bearer <token>` header
 - Set `REFRESH_API_TOKEN` environment variable for authentication
 

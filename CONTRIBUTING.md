@@ -21,6 +21,7 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 ### Reporting Bugs
 
 If you find a bug, please [open a bug report issue](../../issues/new?template=bug_report.md) with:
+
 - A clear, descriptive title
 - Steps to reproduce the issue
 - Expected behavior
@@ -31,6 +32,7 @@ If you find a bug, please [open a bug report issue](../../issues/new?template=bu
 ### Suggesting Enhancements
 
 We welcome feature suggestions! Please [open a feature request](../../issues/new?template=feature_request.md) with:
+
 - A clear description of the feature
 - Why this feature would be useful
 - Any implementation ideas you have
@@ -38,12 +40,14 @@ We welcome feature suggestions! Please [open a feature request](../../issues/new
 ### Adding Spatial Audio Tracks
 
 One of the most valuable contributions is adding new spatial audio releases! You can:
+
 - [Submit a track addition request](../../issues/new?template=track_addition.md) if you'd like us to add it
 - Or see the [Adding New Tracks](#adding-new-tracks) section below to add it yourself via PR
 
 ### Code Contributions
 
 We welcome code contributions for:
+
 - Bug fixes
 - New features
 - Performance improvements
@@ -63,43 +67,50 @@ We welcome code contributions for:
 1. **Fork the repository** on GitHub
 
 2. **Clone your fork:**
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/spatial-selecta.git
    cd spatial-selecta
    ```
 
 3. **Add upstream remote:**
+
    ```bash
    git remote add upstream https://github.com/doronpers/spatial-selecta.git
    ```
 
 4. **Install frontend dependencies:**
+
    ```bash
    npm install
    ```
 
 5. **Install backend dependencies (optional):**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 6. **Start development server:**
+
    ```bash
    npm start
    ```
 
 7. **Start backend (optional):**
+
    ```bash
    uvicorn backend.main:app --reload --port 8000
    ```
 
-For more detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
+For more detailed setup instructions, see [Documentation/Guides/SETUP.md](Documentation/Guides/SETUP.md).
 
 ## Making Changes
 
 ### Branching Strategy
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -107,6 +118,7 @@ For more detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
 2. **Make your changes** with clear, focused commits
 
 3. **Keep your branch up to date:**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
@@ -125,6 +137,7 @@ Add search functionality to track list
 ```
 
 **Guidelines:**
+
 - Use present tense ("Add feature" not "Added feature")
 - Be descriptive but concise
 - Reference issue numbers when applicable (#123)
@@ -141,6 +154,7 @@ Add search functionality to track list
 2. **Update documentation** if needed
 
 3. **Push to your fork:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -156,6 +170,7 @@ Add search functionality to track list
 ### PR Checklist
 
 Before submitting, ensure:
+
 - [ ] Code follows the project's style guidelines
 - [ ] Changes work locally without errors
 - [ ] Documentation is updated if needed
@@ -174,6 +189,7 @@ Before submitting, ensure:
 - Use `escapeHtml()` for user-generated content
 
 **Example:**
+
 ```javascript
 function renderTracks() {
   const tracksHtml = tracks.map(track => {
@@ -191,6 +207,7 @@ function renderTracks() {
 - Keep functions focused
 
 **Example:**
+
 ```python
 def get_tracks(db: Session, platform: str = None) -> List[Track]:
     """
@@ -220,7 +237,7 @@ def get_tracks(db: Session, platform: str = None) -> List[Track]:
 
 ### Track Data Format
 
-All tracks must follow the standardized format in [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
+All tracks must follow the standardized format in [Documentation/Reference/DATA_FORMAT.md](Documentation/Reference/DATA_FORMAT.md).
 
 ### Quick Guide
 
@@ -231,12 +248,14 @@ All tracks must follow the standardized format in [docs/DATA_FORMAT.md](docs/DAT
    - Apple Music link (must include track ID)
 
 2. **Find the next ID:**
+
    ```bash
    # Check highest ID in data.json
    cat data.json | grep '"id":' | tail -1
    ```
 
 3. **Add track to `data.json`:**
+
    ```json
    {
      "id": 999,
@@ -253,6 +272,7 @@ All tracks must follow the standardized format in [docs/DATA_FORMAT.md](docs/DAT
    ```
 
 4. **Validate JSON:**
+
    ```bash
    # Check JSON is valid
    cat data.json | python -m json.tool > /dev/null && echo "Valid JSON"
@@ -260,7 +280,7 @@ All tracks must follow the standardized format in [docs/DATA_FORMAT.md](docs/DAT
 
 5. **Test locally:**
    - Start dev server: `npm start`
-   - Visit http://localhost:8080
+   - Visit <http://localhost:8080>
    - Verify track appears correctly
    - Test the music link works
 
@@ -273,12 +293,13 @@ All tracks must follow the standardized format in [docs/DATA_FORMAT.md](docs/DAT
 - ❌ Invalid JSON syntax (trailing commas)
 - ❌ Duplicate IDs
 
-See [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md) for complete validation rules.
+See [Documentation/Reference/DATA_FORMAT.md](Documentation/Reference/DATA_FORMAT.md) for complete validation rules.
 
 ## Questions?
 
 If you have questions:
-- Check existing [documentation](docs/)
+
+- Check existing [documentation](Documentation/)
 - Open a GitHub issue
 - Review [closed issues](https://github.com/doronpers/spatial-selecta/issues?q=is%3Aissue+is%3Aclosed) for similar questions
 

@@ -1,0 +1,33 @@
+# Spatial Selecta - Agent Rules
+
+You are an AI coding assistant working on the **Spatial Selecta** repository.
+
+## CRITICAL: Read Before ANY Task
+
+Before starting any task, you MUST read and follow: `AGENT_KNOWLEDGE_BASE.md` in the repository root.
+
+This file contains:
+- Prime directives (patent compliance, security, design philosophy)
+- Coding standards (black, flake8, Pydantic)
+- Development workflows
+- Testing requirements
+
+## Quick Rules
+
+1. **PATENT COMPLIANCE**: NEVER use LPC, source-filter models, or static formant values
+2. **Format**: Use `black` for Python
+3. **Style**: `snake_case` for functions, `PascalCase` for classes
+4. **Security**: NEVER log API keys, PII, or raw audio bytes
+5. **Tests**: Run `pytest` before committing
+
+## Key Commands
+
+```bash
+black .              # Format
+flake8 .             # Lint
+pytest               # Test
+```
+
+## Audio Format
+
+All audio must be **float32 mono numpy arrays at 16kHz**

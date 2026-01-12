@@ -279,4 +279,9 @@ MIT License
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Agent Instructions
-This repository follows [Agent Behavioral Standards](Documentation/Governance/AGENT_BEHAVIORAL_STANDARDS.md). All AI agents MUST read these before performing any tasks.
+
+> **CRITICAL**: All AI agents MUST read [`AGENT_KNOWLEDGE_BASE.md`](AGENT_KNOWLEDGE_BASE.md) before performing any tasks. It contains non-negotiable Patent, Security, and Design rules.
+
+Additional resources:
+
+- [Agent Behavioral Standards](Documentation/Governance/AGENT_BEHAVIORAL_STANDARDS.md)

@@ -7,6 +7,7 @@ You are an AI coding assistant working on the **Spatial Selecta** repository.
 Before starting any task, you MUST read and follow: `AGENT_KNOWLEDGE_BASE.md` in the repository root.
 
 This file contains:
+
 - Prime directives (patent compliance, security, design philosophy)
 - Coding standards (black, flake8, Pydantic)
 - Development workflows

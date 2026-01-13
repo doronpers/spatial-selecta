@@ -26,7 +26,7 @@ A website that automatically tracks and displays the latest music releases avail
 
 ### Design Philosophy
 
-**"Good design is as little design as possible." - Dieter Rams**
+> "Good design is as little design as possible." — Dieter Rams
 
 This project adheres to a strict minimalist design system:
 

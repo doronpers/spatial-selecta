@@ -31,9 +31,9 @@ Complete catalog of all documentation for SpatialSelects.com.
 
 | Document | Description |
 |----------|-------------|
-| [Agent Guidelines](Governance/AGENTS.md) | AI agent instructions and context |
-| [Documentation Standards](Governance/DOCUMENTATION_ORGANIZATION_STANDARDS.md) | How to organize documentation |
-| [Project Checklist](Governance/CHECKLIST.md) | Development and deployment checklist |
+| [Agent Guidelines](governance/AGENTS.md) | Comprehensive guide for AI agents (consolidated) |
+| [Documentation Standards](governance/DOCUMENTATION_ORGANIZATION_STANDARDS.md) | How to organize documentation |
+| [Project Checklist](governance/CHECKLIST.md) | Development and deployment checklist |
 
 ## 📦 Archive
 
@@ -46,6 +46,8 @@ Historical documentation preserved for reference:
 | [Visibility Assessment](Archive/Reports-Historical/REPOSITORY_VISIBILITY_ASSESSMENT.md) | Public vs private assessment | 2026-01 |
 
 See [Archive README](Archive/README.md) for archival policy.
+
+> **Note**: Governance documentation consolidated on 2026-01-13. See [Archive/governance-superseded](Archive/governance-superseded/README.md) for details.
 
 ## 🔍 By Topic
 
@@ -68,8 +70,8 @@ See [Archive README](Archive/README.md) for archival policy.
 
 ### AI & Automation
 
-- [Agent Guidelines](Governance/AGENTS.md)
-- [Project Checklist](Governance/CHECKLIST.md)
+- [Agent Guidelines](governance/AGENTS.md) - Comprehensive guide for AI agents
+- [Project Checklist](governance/CHECKLIST.md)
 
 ## Navigation
 
@@ -79,5 +81,5 @@ See [Archive README](Archive/README.md) for archival policy.
 
 ---
 
-**Last Updated**: 2026-01-10  
-**Total Active Documents**: 16 (excluding archive)
+**Last Updated**: 2026-01-13  
+**Total Active Documents**: 14 (excluding archive)

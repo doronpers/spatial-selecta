@@ -284,4 +284,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 Additional resources:
 
-- [Agent Behavioral Standards](Documentation/Governance/AGENT_BEHAVIORAL_STANDARDS.md)
+- [Agent Guidelines](Documentation/governance/AGENTS.md) - Comprehensive guide for AI agents

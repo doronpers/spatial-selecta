@@ -136,19 +136,6 @@ Security improvements and vulnerability fixes
 
 ---
 
-## Future Roadmap
+## Note
 
-Planned enhancements for future releases:
-
-- Amazon Music API integration
-- User accounts and favorites
-- Playlist creation
-- Email notifications for new releases
-- Frontend search functionality
-- Genre filtering
-- Artist page views
-- WebSocket support for real-time updates
-- Improved credits scraping
-- More comprehensive test coverage
-- Performance optimizations
-- Additional spatial audio format support
+For planned enhancements and future development, see the project [README](README.md) or open GitHub issues.

@@ -19,9 +19,9 @@ Welcome to the comprehensive documentation for SpatialSelects.com - your guide t
 
 ### 🤖 For AI Agents
 
-- [Agent Guidelines](Governance/AGENTS.md) - AI agent instructions
-- [Documentation Standards](Governance/DOCUMENTATION_ORGANIZATION_STANDARDS.md) - How to maintain docs
-- [Project Checklist](Governance/CHECKLIST.md) - Development checklist
+- [Agent Guidelines](governance/AGENTS.md) - Comprehensive guide (consolidated)
+- [Documentation Standards](governance/DOCUMENTATION_ORGANIZATION_STANDARDS.md) - How to maintain docs
+- [Project Checklist](governance/CHECKLIST.md) - Development checklist
 
 ### 📋 Complete Index
 
@@ -39,9 +39,9 @@ Documentation/
 
 ## Recent Updates
 
+- **2026-01-13**: Consolidated agent documentation - merged 3 files into comprehensive guide
 - **2026-01-10**: Reorganized documentation structure - consolidated `docs/` into `Documentation/`
 - **2026-01-10**: Established documentation organization standards
-- **2026-01-05**: Added repository visibility assessment
 
 ## Contributing to Documentation
 

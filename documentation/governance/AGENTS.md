@@ -1,8 +1,14 @@
-# Spatial Selecta - Agent Instructions
+# Spatial Selecta - Agent Guidelines
+
+**Purpose**: Comprehensive guide for AI agents working on the SpatialSelects.com project.
+
+**Last Updated**: 2026-01-13
+
+---
 
 ## Project Overview
 
-**Spatial Selecta** is a minimalist website that tracks and displays the latest music releases available in immersive spatial audio formats (Dolby Atmos, 360 Reality Audio) on Apple Music and Amazon Music. The site serves as an informational resource and review platform for spatial audio enthusiasts.
+**Spatial Selecta** is a minimalist website that tracks and displays the latest music releases available in immersive spatial audio formats (Dolby Atmos, 360 Reality Audio) on Apple Music and Amazon Music.
 
 ### Purpose
 
@@ -11,670 +17,507 @@
 - Enable discovery of immersive music across platforms
 - Track release dates and format availability
 
-### Target Audience
-
-- Audiophiles interested in spatial audio
-- Music enthusiasts seeking immersive listening experiences
-- Users deciding between Apple Music and Amazon Music for spatial audio content
-
 ### Key Features
 
-- Automated backend discovery (every 48 hours via scheduler)
-- Platform filtering (Apple Music, Amazon Music)
-- Format filtering (Dolby Atmos, 360 Reality Audio)
-- New release badges (last 30 days)
-- Responsive, minimalist design
-- Manual refresh capability
-- REST API for programmatic access
+- **Automated Discovery**: Backend scans Apple Music every 48 hours via scheduler
+- **Platform Filtering**: Apple Music, Amazon Music
+- **Format Filtering**: Dolby Atmos, 360 Reality Audio
+- **Manual Refresh**: Users can trigger on-demand updates
+- **REST API**: Programmatic access to spatial audio catalog
+- **Responsive Design**: Mobile-first, minimalist interface
 
-## Architecture
+---
+
+## Quick Reference
 
 ### Technology Stack
 
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
 - **Backend**: Python FastAPI with SQLAlchemy ORM
-- **Data Storage**: SQLite (development) or PostgreSQL (production), with `data.json` fallback
-- **Scheduler**: APScheduler for background jobs (runs every 48 hours)
-- **API Integration**: Apple Music API for automatic track discovery
-- **Build Tools**: None (pure static site)
-- **Development Server**: `http-server` (via npm) for frontend, `uvicorn` for backend
-- **Deployment**: Static hosting for frontend (GitHub Pages, Netlify, Vercel), backend on Render/VPS
+- **Database**: SQLite (dev) / PostgreSQL (production)
+- **Scheduler**: APScheduler (48-hour intervals)
+- **API Integration**: Apple Music API for track discovery
+- **Deployment**: Render.com (recommended) or VPS
 
-### File Structure
+### Project Structure
 
-```text
+```
 spatial-selecta/
-├── index.html              # Main HTML structure and layout
-├── styles.css              # All styling, responsive design, CSS variables
-├── app.js                   # Frontend application logic, data handling, rendering
-├── data.json                # Music releases database (JSON array, fallback)
-├── package.json             # Frontend project metadata and dependencies
-├── requirements.txt         # Backend Python dependencies
-├── backend/
-│   ├── main.py              # FastAPI application and endpoints
-│   ├── models.py            # SQLAlchemy database models
-│   ├── schemas.py           # Pydantic request/response schemas
-│   ├── database.py          # Database configuration and session management
-│   ├── scheduler.py         # Background job scheduler (APScheduler)
-│   └── apple_music_client.py # Apple Music API client
-├── README.md                # User-facing documentation
-├── SETUP.md                 # Setup guide
-├── DEPLOYMENT.md            # Deployment guide
-└── agents.md                # This file - AI agent instructions
+├── index.html              # Main HTML structure
+├── styles.css              # All styling and responsive design
+├── app.js                  # Frontend application logic
+├── data.json               # Fallback data store
+├── backend/                # Python FastAPI backend
+│   ├── main.py            # API endpoints
+│   ├── models.py          # Database models
+│   ├── schemas.py         # Pydantic schemas
+│   ├── database.py        # Database configuration
+│   ├── scheduler.py       # Background jobs
+│   └── apple_music_client.py
+├── Documentation/          # All documentation
+└── tests/                 # Test suite
 ```
 
-### Data Flow
+### Essential Documentation
 
-```mermaid
-graph TD
-    A[Page Load] --> B[loadMusicData]
-    B --> C[Fetch data.json]
-    C --> D[Parse JSON]
-    D --> E[Sort by Release Date]
-    E --> F[Store in allTracks]
-    F --> G[applyFilters]
-    G --> H[Filter by Platform/Format]
-    H --> I[renderTracks]
-    I --> J[Create Track Cards]
-    J --> K[Display in Grid]
-    
-    L[User Changes Filter] --> G
-    M[User Clicks Refresh] --> B
-    N[Auto-refresh Timer] --> B
+- [`AGENT_KNOWLEDGE_BASE.md`](../../AGENT_KNOWLEDGE_BASE.md) - **READ THIS FIRST** (patent compliance, security, design philosophy)
+- [`README.md`](../../README.md) - User-facing project overview
+- [`CONTRIBUTING.md`](../../CONTRIBUTING.md) - Development setup and guidelines
+- [`Documentation/DOCUMENTATION_INDEX.md`](../DOCUMENTATION_INDEX.md) - Complete doc catalog
+
+---
+
+## Core Agent Standards
+
+> **CRITICAL**: All AI agents MUST read [`AGENT_KNOWLEDGE_BASE.md`](../../AGENT_KNOWLEDGE_BASE.md) before any tasks. It contains non-negotiable Patent, Security, and Design rules.
+
+### A. No Corner-Cutting
+
+**Complete Solutions**: Never provide "partial" or "placeholder" code unless explicitly requested for a quick prototype.
+
+**Error Handling**: All new code must include:
+
+- Robust error handling
+- Appropriate logging
+- Edge-case validation
+- User-friendly error messages
+
+**Documentation**: Every function, class, and module must have:
+
+- Clear docstrings explaining purpose
+- Comments explaining the "why," not just the "how"
+- Type hints (Python) for clarity
+
+### B. Robust & Capable Solutions
+
+**Modern Practices**: Utilize modern, capable libraries and features:
+
+- Python: Type hints, AsyncIO, Pydantic v2
+- JavaScript: ES6+ features (arrow functions, async/await, template literals)
+- Follow established project patterns
+
+**Scalability**: Design solutions considering:
+
+- Future growth and feature additions
+- Performance at scale
+- Maintainability over time
+- Database query efficiency
+
+**Standardization**: Adhere strictly to project standards:
+
+- 88-character line length (Python)
+- `black` formatting (Python)
+- `flake8` linting (Python)
+- `snake_case` for Python functions/vars, `PascalCase` for classes
+- Security-first approach (escaping, validation, HTTPS)
+
+### C. Thorough Planning & Verification
+
+**Implementation Plans**: Before significant changes:
+
+1. Provide detailed implementation plan for user review
+2. Identify risks and edge cases
+3. Consider impacts on existing functionality
+4. Get approval before proceeding
+
+**Verification First**: Every change must be verified:
+
+- Run automated tests (create them if missing)
+- Manual testing for UI changes
+- Check responsive design on mobile
+- Verify no console errors
+
+**Zero Regressions**: You are responsible for ensuring:
+
+- New features don't break existing functionality
+- All tests pass before committing
+- No degradation in performance or UX
+
+---
+
+## Agent Workflow
+
+Follow this 5-step process for all tasks:
+
+### 1. Research
+
+- Fully understand existing context and constraints
+- Read relevant documentation
+- Review related code files
+- Identify dependencies and potential impacts
+
+### 2. Plan
+
+- Draft comprehensive plan identifying:
+  - What will change and why
+  - Risks and edge cases
+  - Testing approach
+  - Documentation updates needed
+- Get user approval for significant changes
+
+### 3. Implement
+
+- Write clean, efficient, well-tested code
+- Follow established patterns and conventions
+- Include proper error handling
+- Add/update documentation
+
+### 4. Verify
+
+- Run full test suite: `pytest tests/`
+- Run linting: `flake8 .`
+- Run formatting: `black . --check`
+- Manual testing for UI/UX changes
+- Verify responsive design
+
+### 5. Refine
+
+- Address any feedback or failures immediately
+- If tests fail, fix them thoroughly
+- Update documentation to reflect changes
+- Ensure all verification steps pass
+
+---
+
+## Coding Standards & Formatting
+
+### Python Standards
+
+**Formatting**:
+
+- Line length: **88 characters** (enforced by `black`)
+- Formatter: `black`
+- Import sorting: `isort` with black profile
+
+**Linting**:
+
+- Linter: `flake8`
+- Configuration in `.flake8`:
+
+  ```ini
+  [flake8]
+  max-line-length = 88
+  extend-ignore = E203, W503
+  exclude = .git,__pycache__,venv,.venv
+  ```
+
+**Style**:
+
+- `snake_case` for functions and variables
+- `PascalCase` for classes
+- Type hints for function parameters and returns
+- Docstrings for all public functions/classes
+
+**Commands**:
+
+```bash
+black .                    # Format code
+isort .                    # Sort imports
+flake8 .                   # Check linting
+pytest tests/              # Run tests
 ```
 
-### Application State
+### JavaScript Standards
 
-The app maintains the following global state:
+**Style**:
 
-- `allTracks`: Array of all loaded tracks from `data.json`
-- `filteredTracks`: Array of tracks matching current filter criteria
-- `currentFilters`: Object containing active filter selections
-  - `platform`: 'all' | 'Apple Music' | 'Amazon Music'
-  - `format`: 'all' | 'Dolby Atmos' | '360 Reality Audio'
+- ES6+ features (arrow functions, const/let, template literals)
+- Descriptive variable and function names
+- Keep functions small and focused
+- Comment complex logic
 
-## Code Organization
+**Security**:
 
-### `index.html` Structure
+- Always use `escapeHtml()` for user-generated content
+- Validate HTTPS URLs with `isValidHttpsUrl()`
+- Never trust user input
 
-**Header Section** (`<header>`):
+**Example**:
 
-- Site title: "SpatialSelects.com"
-- Tagline: "Latest releases in spatial audio formats"
-- Last updated timestamp (`#lastUpdated`) - dynamically updated
-
-**Navigation** (`.main-nav`):
-
-- Releases tab (`data-view="releases"`)
-- Engineers tab (`data-view="engineers"`)
-- Hardware Guide tab (`data-view="hardware"`)
-
-**Filters Section** (`.filters`):
-
-- Platform dropdown (`#platformFilter`) - filters by Apple Music/Amazon Music
-- Format dropdown (`#formatFilter`) - filters by Dolby Atmos/360 Reality Audio
-- Refresh button (`#refreshButton`) - reloads data from API
-- Sync button (`#syncButton`) - triggers backend discovery
-
-**Main Content** (`<main>`):
-
-- Releases view (`#releasesView`) - active by default
-  - Releases section (`#releases`) - dynamically populated with track grid
-- Engineers view (`#engineersView`)
-  - Engineers section (`#engineers`) - displays engineer grid
-- Hardware Guide view (`#hardwareView`)
-  - Hardware section (`#hardware`) - displays hardware guide content
-
-**Footer** (`<footer>`):
-
-- Copyright and project description
-
-### `app.js` Function Reference
-
-#### Core Functions
-
-**`loadMusicData()`** (async function)
-
-- **Purpose**: Fetches and loads music data from API or fallback to `data.json`
-- **Returns**: Promise (resolves when data is loaded)
-- **Side Effects**: Updates `allTracks` array, applies filters, triggers render
-- **Error Handling**: Shows error banner on failure, logs to console
-- **Sorting**: Sorts tracks by Atmos release date (newest first), falls back to release date
-- **API Integration**: Includes filter parameters in API request
-
-**`setupFilters()`** (function)
-
-- **Purpose**: Attaches event handlers to filter dropdowns
-- **Events**:
-  - Platform filter change → updates `currentFilters.platform` → calls `loadMusicData()`
-  - Format filter change → updates `currentFilters.format` → calls `loadMusicData()`
-
-**`setupRefreshButton()`** (function)
-
-- **Purpose**: Attaches event handler to refresh button
-- **Events**:
-  - Refresh button click → reloads data → updates UI → resets button state
-
-**`setupSyncButton()`** (function)
-
-- **Purpose**: Attaches event handler to sync button and checks sync status
-- **Events**:
-  - Sync button click → triggers backend discovery → shows result → reloads data
-
-**`applyFilters()`** (function)
-
-- **Purpose**: Filters `allTracks` based on current filter criteria
-- **Logic**:
-  - Platform match: `currentFilters.platform === 'all'` OR `track.platform === currentFilters.platform`
-  - Format match: `currentFilters.format === 'all'` OR `track.format === currentFilters.format`
-- **Side Effects**: Updates `filteredTracks`, calls `renderTracks()`
-- **Note**: Filters are also applied server-side via API parameters for efficiency
-
-**`renderTracks()`** (function)
-
-- **Purpose**: Renders filtered tracks to the DOM
-- **Logic**:
-  - If no tracks: shows empty state message
-  - If tracks exist: populates grid with track cards
-- **DOM Manipulation**: Sets `innerHTML` of `#releases` section
-- **Security**: Validates HTTPS URLs before rendering music links
-
-**Track Card Rendering** (within `renderTracks()`)
-
-- **Purpose**: Generates HTML for track cards
-- **Features**:
-  - Album art emoji display
-  - Format badge (Dolby Atmos/360 Reality Audio)
-  - Track title with "New" badge (if within 30 days)
-  - Artist and album names
-  - Platform badge and release date
-  - Music link button (HTTPS validated)
-  - Hall of Shame badge (if flagged)
-- **Security**: Uses `escapeHtml()` for all text, validates URLs with `isValidHttpsUrl()`
-
-#### Utility Functions
-
-**`isValidHttpsUrl(url)`** (function)
-
-- **Purpose**: Validates that a URL is HTTPS to prevent XSS
-- **Parameters**: `url` - URL string to validate
-- **Returns**: Boolean
-- **Logic**: Parses URL and checks protocol is 'https:'
-
-**`isValidDateFormat(dateStr)`** (function)
-
-- **Purpose**: Validates date string is in YYYY-MM-DD format
-- **Parameters**: `dateStr` - Date string to validate
-- **Returns**: Boolean
-- **Logic**: Checks format and validates date components using UTC methods
-
-**`updateLastUpdated()`** (lines 131-143)
-
-- **Purpose**: Updates the "Last updated" timestamp in header
-- **Side Effects**: Updates `#lastUpdated` element text content
-- **Format**: "Month Day, Year, Hour:Minute AM/PM"
-
-**`escapeHtml(text)`** (lines 146-150)
-
-- **Purpose**: Escapes HTML special characters to prevent XSS attacks
-- **Parameters**: `text` - string to escape
-- **Returns**: Escaped HTML string
-- **Method**: Uses DOM text node to safely escape
-
-**`setupViewSwitching()`** (function)
-
-- **Purpose**: Implements navigation tab switching between views
-- **Implementation**: Attaches click handlers to nav links
-- **Logic**:
-  - Updates active nav link styling
-  - Shows/hides view sections based on `data-view` attribute
-  - Loads data for specific views (e.g., engineers) when needed
-
-**`loadEngineers()`** (async function)
-
-- **Purpose**: Loads engineer data from API
-- **Returns**: Promise
-- **Side Effects**: Updates `allEngineers` and calls `renderEngineers()`
-
-### `styles.css` Organization
-
-**CSS Variables** (`:root`, lines 7-18):
-
-- Color scheme: Black/white/gray palette
-- Typography: Helvetica Neue font stack
-- Spacing: Consistent padding/margin values
-
-**Layout Sections**:
-
-- Header (lines 36-62): Site branding and metadata
-- Filters (lines 65-131): Filter controls styling
-- Music Grid (lines 134-226): Card-based grid layout
-- Empty State (lines 240-251): No results messaging
-- Footer (lines 254-266): Site footer
-
-**Responsive Breakpoints**:
-
-- `@media (max-width: 768px)`: Tablet - single column grid, stacked filters
-- `@media (max-width: 480px)`: Mobile - adjusted padding
-
-### Data Structure
-
-#### Track Object Schema
-
-```typescript
-interface Track {
-  id: number;                    // Unique identifier
-  title: string;                 // Song title
-  artist: string;                // Artist name
-  album: string;                 // Album name
-  format: "Dolby Atmos" | "360 Reality Audio";  // Audio format
-  platform: "Apple Music" | "Amazon Music";     // Platform
-  releaseDate: string;           // ISO date (YYYY-MM-DD)
-  albumArt: string;             // Emoji placeholder (currently unused)
+```javascript
+function renderTracks() {
+  const tracksHtml = tracks.map(track => {
+    const titleSafe = escapeHtml(track.title);
+    const artistSafe = escapeHtml(track.artist);
+    return `<div class="music-card">
+      <h3>${titleSafe}</h3>
+      <p>${artistSafe}</p>
+    </div>`;
+  }).join('');
 }
 ```
 
-#### Example Track
-
-```json
-{
-  "id": 1,
-  "title": "Blinding Lights",
-  "artist": "The Weeknd",
-  "album": "After Hours",
-  "format": "Dolby Atmos",
-  "platform": "Apple Music",
-  "releaseDate": "2025-12-20",
-  "albumArt": "🌃"
-}
-```
-
-## Development Guidelines
-
-### Code Style
-
-**JavaScript**:
-
-- Use ES6+ features (arrow functions, const/let, template literals)
-- Use descriptive function and variable names
-- Keep functions focused on single responsibility
-- Comment complex logic, especially timezone calculations
-- Use `escapeHtml()` for all user-generated content
+### HTML/CSS Standards
 
 **HTML**:
 
-- Semantic HTML5 elements (`<header>`, `<main>`, `<section>`, `<footer>`)
-- Use descriptive IDs and classes (kebab-case)
-- Include ARIA labels for accessibility (to be added)
+- Use semantic HTML5 elements (`<header>`, `<main>`, `<section>`, `<footer>`)
+- Descriptive IDs and classes (kebab-case)
+- Include ARIA labels for accessibility
 
 **CSS**:
 
-- Use CSS variables for theming
-- Follow BEM-like naming for components (`.music-card`, `.track-title`)
+- Use CSS variables in `:root` for theming
+- Follow BEM-like naming (`.music-card`, `.track-title`)
 - Mobile-first responsive design
 - Minimalist aesthetic - avoid unnecessary styling
 
-### Adding New Tracks
+---
 
-To add a new track to `data.json`:
+## Development Guidelines
 
-1. **Get Track Information**:
-   - Title, artist, album name
-   - Release date (ISO format: YYYY-MM-DD)
-   - Platform (Apple Music or Amazon Music)
-   - Format (Dolby Atmos or 360 Reality Audio)
+### Design Philosophy
 
-2. **Create Track Object**:
+> "Good design is as little design as possible." — Dieter Rams
 
-```json
-{
-  "id": <next available number>,
-  "title": "Song Title",
-  "artist": "Artist Name",
-  "album": "Album Name",
-  "format": "Dolby Atmos",
-  "platform": "Apple Music",
-  "releaseDate": "2025-12-25",
-  "albumArt": "🎵"
-}
-```
+Maintain minimalist aesthetic:
 
-1. **Add to Array**: Append to the array in `data.json`
-2. **Verify**: Check that JSON is valid (no trailing commas, proper quotes)
+- **Honest**: No decorative elements without function
+- **Unobtrusive**: Content first, UI frames it
+- **Thorough**: Precise execution of typography and spacing
+- **Consistent**: Uniform patterns throughout
+
+### Adding New Features
+
+When adding features:
+
+1. Check if it aligns with minimalist philosophy
+2. Ensure it doesn't break responsive design
+3. Consider performance impact
+4. Update documentation
+5. Add tests
+
+### Data Format Compliance
+
+All track data must follow standardized format in [`Documentation/Reference/DATA_FORMAT.md`](../Reference/DATA_FORMAT.md):
+
+Required fields:
+
+- `id` (unique integer)
+- `title`, `artist`, `album` (strings)
+- `format` ("Dolby Atmos" | "360 Reality Audio")
+- `platform` ("Apple Music" | "Amazon Music")
+- `releaseDate`, `atmosReleaseDate` (YYYY-MM-DD format)
+- `musicLink` (valid Apple Music HTTPS URL)
+
+### Security Requirements
+
+**Never log**:
+
+- Raw audio bytes
+- PII (Personal Identifiable Information)
+- API keys or secrets
+
+**Always validate**:
+
+- User input (escape HTML)
+- URLs (HTTPS only)
+- Date formats (YYYY-MM-DD)
+- API responses
+
+**Use security features**:
+
+- Rate limiting for public endpoints
+- Authentication for protected endpoints
+- CORS configuration (no wildcards in production)
+- Content Security Policy headers
+
+---
+
+## Common Tasks
+
+### Adding a New Track
+
+1. Get track information (title, artist, album, dates, platform, format)
+2. Find next available ID in `data.json`
+3. Create track object following data format standards
+4. Validate JSON syntax (no trailing commas)
+5. Test locally: `npm start`
+6. Verify track displays correctly
 
 ### Modifying Filters
 
-**Adding a New Filter Option**:
-
-1. **Update HTML** (`index.html`):
-   - Add new `<option>` to the appropriate `<select>` element
-
-2. **Update JavaScript** (`app.js`):
-   - Add filter property to `currentFilters` object initialization
-   - Update `applyFilters()` to include new filter logic
-   - Add event listener in `setupEventListeners()`
-
-3. **Example - Adding Genre Filter**:
-
-```javascript
-// In currentFilters initialization
-currentFilters = {
-    platform: 'all',
-    format: 'all',
-    genre: 'all'  // New filter
-};
-
-// In applyFilters()
-const genreMatch = currentFilters.genre === 'all' || track.genre === currentFilters.genre;
-return platformMatch && formatMatch && genreMatch;
-```
+1. Update HTML: Add `<option>` to appropriate `<select>` element
+2. Update JavaScript: Add filter property to `currentFilters` object
+3. Update `applyFilters()` logic to include new filter
+4. Test filter functionality thoroughly
 
 ### Updating Styling
 
 **Color Scheme**:
 
 - Modify CSS variables in `:root` selector
-- Variables cascade throughout the site
 - Maintain contrast ratios for accessibility
+- Stay within monochrome palette with minimal accents
 
 **Layout Changes**:
 
-- Grid layout: Modify `grid-template-columns` in `.music-grid`
-- Card styling: Update `.music-card` and child elements
-- Responsive breakpoints: Adjust `@media` queries
+- Grid: Modify `grid-template-columns` in `.music-grid`
+- Cards: Update `.music-card` and child elements
+- Responsive: Adjust `@media` queries as needed
 
-**Adding New UI Elements**:
+### Testing Checklist
 
-1. Add HTML structure in `index.html`
-2. Style in `styles.css` following existing patterns
-3. Add JavaScript logic in `app.js` if interactive
-
-### Testing Approach
-
-**Manual Testing Checklist**:
+Before committing:
 
 - [ ] Page loads and displays tracks
-- [ ] Filters work correctly (platform and format)
+- [ ] All filters work correctly
 - [ ] Refresh button reloads data
-- [ ] "New" badge appears for recent releases (last 30 days)
+- [ ] "New" badge appears for recent releases
 - [ ] Responsive design works on mobile/tablet
-- [ ] Empty state shows when filters return no results
-- [ ] Date formatting displays correctly
-- [ ] Last updated timestamp updates on refresh
-
-**Browser Compatibility**:
-
-- Test in Chrome, Firefox, Safari, Edge
-- Verify ES6 features are supported (or add polyfills)
-- Check CSS Grid support
-
-**Data Validation**:
-
-- Verify `data.json` is valid JSON
-- Check all required fields are present
-- Ensure dates are valid ISO format
-- Verify no duplicate IDs
-
-## Common Tasks
-
-### Task: Add a New Track
-
-1. Open `data.json`
-2. Find the highest `id` value
-3. Create new track object with `id: <highest + 1>`
-4. Add to array (maintain JSON syntax)
-5. Save file
-6. Test by refreshing the page
-
-### Task: Change Filter Options
-
-1. Edit `<select>` element in `index.html`
-2. Add/remove `<option>` elements
-3. Update filter logic in `applyFilters()` if needed
-4. Test filter functionality
-
-### Task: Modify Card Display
-
-1. Edit `createTrackCard()` function in `app.js`
-2. Modify HTML template string
-3. Update corresponding CSS in `styles.css`
-4. Test rendering
-
-### Task: Update Auto-refresh Schedule
-
-1. Edit `scheduleWeeklyRefresh()` in `app.js`
-2. Modify day/hour checks (currently Friday 3 PM ET)
-3. Update timezone offset if needed
-4. Test timing logic
-
-### Task: Add New Badge/Category
-
-1. Add field to track data structure in `data.json`
-2. Update `createTrackCard()` to display badge
-3. Add CSS styling for badge
-4. Update filter logic if filterable
-
-## API Integration Guide (Future)
-
-### Apple Music API
-
-**Resources**:
-
-- Apple Music API Documentation: <https://developer.apple.com/documentation/applemusicapi>
-- Requires Apple Developer account
-- Uses MusicKit JS for web integration
-
-**Key Endpoints**:
-
-- Search: `/v1/catalog/{storefront}/search`
-- Get Album: `/v1/catalog/{storefront}/albums/{id}`
-- Check Spatial Audio: Look for `contentRating` or `attributes` fields
-
-**Implementation Steps**:
-
-1. Register for Apple Developer account
-2. Create MusicKit identifier
-3. Implement OAuth flow
-4. Query catalog for spatial audio releases
-5. Parse response and update `data.json` or database
-
-### Amazon Music API
-
-**Resources**:
-
-- Amazon Music API (if available)
-- Amazon Product Advertising API (limited music data)
-- May require scraping or manual curation
-
-**Challenges**:
-
-- Limited public API access
-- May need to use web scraping (check ToS)
-- Consider using third-party services
-
-### Recommended Architecture for API Integration
-
-```mermaid
-graph TD
-    A[Scheduled Job] --> B[Fetch Apple Music API]
-    A --> C[Fetch Amazon Music API]
-    B --> D[Parse Spatial Audio Releases]
-    C --> D
-    D --> E[Store in Database/JSON]
-    E --> F[Update data.json]
-    F --> G[Deploy Updated Site]
-    
-    H[GitHub Actions] --> A
-    I[Cron Job] --> A
-```
-
-**Implementation Options**:
-
-1. **Serverless Function** (Netlify Functions, Vercel Functions)
-   - Run weekly cron job
-   - Fetch from APIs
-   - Update `data.json` via Git commit
-
-2. **GitHub Actions**
-   - Scheduled workflow (cron syntax)
-   - Run Node.js/Python script
-   - Commit updated `data.json`
-
-3. **Backend Service** (Node.js/Python)
-   - Express/FastAPI server
-   - Database (PostgreSQL, MongoDB)
-   - REST API endpoint for frontend
-   - Scheduled jobs for data collection
-
-## Troubleshooting
-
-### Issue: Tracks Not Displaying
-
-**Symptoms**: Empty grid, no error messages
-
-**Possible Causes**:
-
-1. `data.json` is invalid JSON (check syntax)
-2. Fetch failed (check network tab, CORS issues)
-3. Filter criteria too restrictive
-4. JavaScript error (check console)
-
-**Solutions**:
-
-- Validate JSON syntax (use JSONLint)
-- Check browser console for errors
-- Verify `data.json` path is correct
-- Test with `currentFilters` set to 'all'
-
-### Issue: Filters Not Working
-
-**Symptoms**: Changing filter doesn't update display
-
-**Possible Causes**:
-
-1. Event listeners not attached
-2. Filter logic incorrect
-3. Data structure mismatch
-
-**Solutions**:
-
-- Check `setupEventListeners()` is called
-- Verify `applyFilters()` logic
-- Ensure track objects have correct `platform`/`format` values
-- Check browser console for errors
-
-### Issue: Auto-refresh Not Working
-
-**Symptoms**: Data doesn't refresh on Friday 3 PM ET
-
-**Possible Causes**:
-
-1. Page not open at refresh time
-2. Timezone calculation incorrect
-3. Browser tab inactive (throttled timers)
-
-**Solutions**:
-
-- Current implementation only works when page is open
-- Move to server-side cron job for reliability
-- Consider using Web Workers for background tasks
-- Test timezone conversion logic
-
-### Issue: Dates Displaying Incorrectly
-
-**Symptoms**: Wrong date format or timezone
-
-**Possible Causes**:
-
-1. Invalid date string format
-2. Browser locale settings
-3. Date parsing error
-
-**Solutions**:
-
-- Ensure dates are ISO format (YYYY-MM-DD)
-- Check `formatDate()` function
-- Verify browser date parsing
-- Test with different date strings
-
-### Issue: Styling Broken on Mobile
-
-**Symptoms**: Layout issues on small screens
-
-**Possible Causes**:
-
-1. Missing responsive CSS
-2. Viewport meta tag missing
-3. CSS Grid not supported
-
-**Solutions**:
-
-- Check `@media` queries in `styles.css`
-- Verify viewport meta tag in `<head>`
-- Test CSS Grid browser support
-- Use Flexbox fallback if needed
-
-## Future Enhancements
-
-### High Priority
-
-1. **Review/Information Content**: Add detail pages/modals with spatial audio mix reviews
-2. **Album Art Display**: Render actual album artwork (not just emojis)
-3. **Deep Links**: Make cards clickable links to Apple Music/Amazon Music
-4. **Search Functionality**: Add search by artist, title, album
-5. **Sort Options**: Sort by date, artist, title
-
-### Medium Priority
-
-1. **Genre Filtering**: Add genre field and filter
-2. **Pagination**: Handle large datasets efficiently
-3. **Favorites**: LocalStorage-based favorites system
-4. **Share Functionality**: Share tracks or filtered views
-5. **Loading States**: Show loading indicators during data fetch
-
-### Technical Improvements
-
-1. **Error Handling**: Better error messages and recovery
-2. **Accessibility**: ARIA labels, keyboard navigation, focus states
-3. **Performance**: Lazy loading, virtual scrolling
-4. **SEO**: Meta tags, structured data (JSON-LD)
-5. **Analytics**: Track user interactions and popular tracks
-
-## Notes for AI Agents
-
-### When Making Changes
-
-1. **Always validate JSON** after editing `data.json`
-2. **Test filters** after modifying filter logic
-3. **Check responsive design** after CSS changes
-4. **Verify XSS protection** when adding user input handling
-5. **Maintain minimalist aesthetic** - avoid over-styling
-
-### Code Patterns to Follow
-
-- Use template literals for HTML generation
-- Escape all user-generated content with `escapeHtml()`
-- Keep functions small and focused
-- Use descriptive variable names
-- Comment timezone/date logic
-
-### What NOT to Do
-
-- Don't remove `escapeHtml()` calls (security risk)
-- Don't break the filter logic
-- Don't add unnecessary dependencies
-- Don't over-complicate the architecture
-- Don't break responsive design
-
-### Questions to Ask Before Major Changes
-
-1. Does this maintain the minimalist design?
-2. Will this work on mobile devices?
-3. Is the data structure scalable?
-4. Does this require new dependencies?
-5. How will this affect performance?
+- [ ] Empty state shows when no results
+- [ ] No console errors
+- [ ] All tests pass: `pytest tests/`
+- [ ] Linting passes: `flake8 .`
+- [ ] Formatting correct: `black . --check`
 
 ---
 
-**Last Updated**: 2025-01-27
-**Version**: 1.0.0
+## What Agents Should Do
+
+✅ **Always validate JSON** after editing `data.json`
+
+✅ **Test filters** after modifying filter logic
+
+✅ **Check responsive design** after CSS changes
+
+✅ **Verify XSS protection** when adding user input handling
+
+✅ **Maintain minimalist aesthetic** - avoid over-styling
+
+✅ **Use template literals** for HTML generation
+
+✅ **Escape all user content** with `escapeHtml()`
+
+✅ **Keep functions small** and focused on single responsibility
+
+✅ **Use descriptive names** for variables and functions
+
+✅ **Comment timezone/date logic** - it's complex
+
+✅ **Follow established patterns** in existing code
+
+✅ **Update documentation** when making changes
+
+✅ **Run full test suite** before committing
+
+---
+
+## What Agents Should NOT Do
+
+❌ **Don't remove `escapeHtml()` calls** - security risk
+
+❌ **Don't break filter logic** - core functionality
+
+❌ **Don't add unnecessary dependencies** - keep it simple
+
+❌ **Don't over-complicate architecture** - vanilla is intentional
+
+❌ **Don't break responsive design** - mobile-first is critical
+
+❌ **Don't hardcode configuration** - use settings/environment vars
+
+❌ **Don't skip testing** - verification is mandatory
+
+❌ **Don't commit without formatting** - run `black` first
+
+❌ **Don't ignore linting errors** - fix them properly
+
+❌ **Don't make assumptions** - ask for clarification when unsure
+
+---
+
+## Questions to Ask Before Major Changes
+
+Before making significant architectural or design changes, ask:
+
+1. **Does this maintain the minimalist design philosophy?**
+2. **Will this work on mobile devices?**
+3. **Is the data structure scalable?**
+4. **Does this require new dependencies?**
+5. **How will this affect performance?**
+6. **Is this change reversible if needed?**
+7. **Does this follow established patterns?**
+8. **Have I updated relevant documentation?**
+
+---
+
+## Troubleshooting Guide
+
+### Tracks Not Displaying
+
+**Symptoms**: Empty grid, no error messages
+
+**Common Causes**:
+
+- Invalid JSON in `data.json`
+- CORS issues (check browser console)
+- Filter criteria too restrictive
+- API endpoint unavailable
+
+**Solutions**:
+
+1. Validate JSON syntax (use JSONLint)
+2. Check browser console for errors
+3. Verify API URL detection is correct
+4. Test with filters set to "all"
+5. Check network tab for failed requests
+
+### Filters Not Working
+
+**Symptoms**: Changing filter doesn't update display
+
+**Common Causes**:
+
+- Event listeners not attached
+- Filter logic incorrect
+- Data structure mismatch
+
+**Solutions**:
+
+1. Verify `setupFilters()` is called on page load
+2. Check `applyFilters()` logic
+3. Ensure track objects have correct `platform`/`format` values
+4. Check browser console for JavaScript errors
+
+### Backend API Issues
+
+**Symptoms**: 500 errors, connection failures
+
+**Common Causes**:
+
+- Missing environment variables
+- Database connection issues
+- Apple Music API token expired
+
+**Solutions**:
+
+1. Check backend logs for detailed errors
+2. Verify all required environment variables set
+3. Test database connection
+4. Regenerate Apple Music token if expired
+5. Check CORS configuration for frontend domain
+
+---
+
+## Additional Resources
+
+### Documentation
+
+- [Setup Guide](../Guides/SETUP.md) - Local development setup
+- [Deployment Guide](../Guides/DEPLOYMENT.md) - Production deployment
+- [API Reference](../Reference/API.md) - REST API endpoints
+- [Data Format](../Reference/DATA_FORMAT.md) - Track data standards
+- [Security Guide](../Reference/SECURITY.md) - Security best practices
+- [Development Guide](../Guides/DEVELOPMENT.md) - Development workflow
+
+### Configuration Files
+
+- `.flake8` - Python linting configuration
+- `pyproject.toml` - Python tool configuration (black, isort)
+- `.pre-commit-config.yaml` - Pre-commit hooks
+- `.env.example` - Environment variables template
+
+---
+
+**Note to Agents**: Following these guidelines is mandatory for maintaining code quality, security, and design integrity. When in doubt, ask for clarification rather than making assumptions.

@@ -7,7 +7,10 @@
     "start": "npx http-server . -p 8080",
     "backend": "uvicorn backend.main:app --reload --port 8000",
     "backend:prod": "uvicorn backend.main:app --host 0.0.0.0 --port 8000",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix && prettier --write .",
+    "format": "prettier --write ."
   },
   "keywords": [
     "spatial-audio",
@@ -28,6 +31,12 @@
   },
   "homepage": "https://spatialselects.com",
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.0.0",
+    "http-server": "^14.1.1",
+    "prettier": "^3.8.0"
   }
 }

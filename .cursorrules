@@ -19,7 +19,8 @@ This file contains:
 2. **Format**: Use `black` for Python
 3. **Style**: `snake_case` for functions, `PascalCase` for classes
 4. **Security**: NEVER log API keys, PII, or raw audio bytes
-5. **Tests**: Run `pytest` before committing
+5. **Reasoning Logs**: After significant tasks (complex, architectural, refactoring, non-obvious bug fixes), create log entry at `feedback-loop/agent_reasoning_logs/logs/YYYY-MM-DD_spatial-selecta_task.md` (see template: `feedback-loop/agent_reasoning_logs/templates/reasoning_entry.md`)
+6. **Tests**: Run `pytest` before committing
 
 ## Key Commands
 

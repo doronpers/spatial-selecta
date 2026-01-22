@@ -1,10 +1,11 @@
 """
 Pydantic schemas for API request/response validation.
 """
-from pydantic import BaseModel, Field, HttpUrl, validator
+import re
 from datetime import datetime
 from typing import List, Optional
-import re
+
+from pydantic import BaseModel, Field, validator
 
 
 class TrackBase(BaseModel):
@@ -18,7 +19,7 @@ class TrackBase(BaseModel):
     atmos_release_date: Optional[datetime] = Field(None, description="Atmos release date")
     album_art: Optional[str] = Field(None, max_length=10, description="Album art emoji or URL")
     music_link: Optional[str] = Field(None, max_length=500, description="Music link URL")
-    
+
     @validator('title', 'artist', 'album')
     def validate_text_fields(cls, v):
         """Validate text fields don't contain dangerous characters."""
@@ -29,7 +30,7 @@ class TrackBase(BaseModel):
         if len(v) == 0:
             raise ValueError("Field cannot be empty after sanitization")
         return v
-    
+
     @validator('music_link')
     def validate_music_link(cls, v):
         """Validate music link is a safe URL."""
@@ -48,7 +49,7 @@ class TrackCreate(TrackBase):
     """Schema for creating a new track."""
     apple_music_id: Optional[str] = Field(None, max_length=200, description="Apple Music track ID")
     extra_metadata: Optional[str] = Field(None, max_length=10000, description="Additional metadata as JSON string")
-    
+
     @validator('apple_music_id')
     def validate_apple_music_id(cls, v):
         """Validate Apple Music ID format."""

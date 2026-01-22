@@ -1,9 +1,11 @@
 """
 SQLAlchemy models for spatial audio tracks.
 """
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, Float, ForeignKey, Table
-from sqlalchemy.orm import relationship
 from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+
 from backend.database import Base
 
 
@@ -17,7 +19,7 @@ class Engineer(Base):
     name = Column(String(500), unique=True, nullable=False, index=True)
     slug = Column(String(500), index=True)
     profile_image_url = Column(String(500), nullable=True)
-    
+
     # Relationships
     credits = relationship("TrackCredit", back_populates="engineer")
 
@@ -32,7 +34,7 @@ class TrackCredit(Base):
     track_id = Column(Integer, ForeignKey("tracks.id"), nullable=False, index=True)
     engineer_id = Column(Integer, ForeignKey("engineers.id"), nullable=False, index=True)
     role = Column(String(100), nullable=False)  # e.g., "Immersive Mix Engineer"
-    
+
     # Relationships
     track = relationship("Track", back_populates="credits")
     engineer = relationship("Engineer", back_populates="credits")

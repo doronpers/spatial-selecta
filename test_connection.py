@@ -1,6 +1,6 @@
-import sys
-import os
 import logging
+import sys
+
 from backend.apple_music_client import AppleMusicClient
 
 # Configure logging to stdout so we see the output

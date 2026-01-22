@@ -2,25 +2,32 @@
 Main FastAPI application for SpatialSelects.com.
 Provides API endpoints for spatial audio track management and automatic detection.
 """
-from fastapi import FastAPI, Depends, HTTPException, Header, Query, Request
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
-from starlette.requests import Request as StarletteRequest
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
-from typing import List, Optional, Tuple
-from datetime import datetime, timedelta
+import hashlib
+import hmac
 import logging
 import os
 import time
-import hmac
-import hashlib
+from datetime import datetime, timedelta
+from typing import List, Optional, Tuple
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response
 
 from backend.database import get_db, init_db
-from backend.models import Track, CommunityRating, Engineer, TrackCredit
-from backend.schemas import TrackResponse, RefreshResponse, RatingRequest, RatingResponse, EngineerResponse
+from backend.models import CommunityRating, Engineer, Track, TrackCredit
 from backend.scheduler import start_scheduler, trigger_manual_refresh
+from backend.schemas import (
+    EngineerResponse,
+    RatingRequest,
+    RatingResponse,
+    RefreshResponse,
+    TrackResponse,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +49,7 @@ MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware to add security headers to all responses."""
-    
+
     async def dispatch(self, request: StarletteRequest, call_next):
         # Check request size (basic protection)
         content_length = request.headers.get("content-length")
@@ -57,15 +64,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                     )
             except ValueError:
                 pass  # Invalid content-length, let it through
-        
+
         response = await call_next(request)
-        
+
         # Security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         # HSTS (only in production with HTTPS)
         if IS_PRODUCTION:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
@@ -73,7 +80,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Remove server header (information disclosure)
         if "server" in response.headers:
             del response.headers["server"]
-        
+
         return response
 
 # Add security headers middleware
@@ -121,14 +128,14 @@ def _cleanup_rate_limit_store():
     """Periodically clean up old rate limit entries to prevent memory leaks."""
     global _last_cleanup_time
     current_time = time.time()
-    
+
     # Only cleanup every CLEANUP_INTERVAL seconds
     if current_time - _last_cleanup_time < CLEANUP_INTERVAL:
         return
-    
+
     _last_cleanup_time = current_time
     cutoff_time = current_time - RATE_LIMIT_WINDOW
-    
+
     # Remove IPs with no recent requests
     ips_to_remove = [
         ip for ip, req_times in rate_limit_store.items()
@@ -136,7 +143,7 @@ def _cleanup_rate_limit_store():
     ]
     for ip in ips_to_remove:
         del rate_limit_store[ip]
-    
+
     # Clean old requests from remaining IPs
     for ip in list(rate_limit_store.keys()):
         rate_limit_store[ip] = [
@@ -225,28 +232,28 @@ def check_rate_limit(client_ip: str) -> bool:
             # Keep only top 5000 most recent IPs
             rate_limit_store.clear()
             rate_limit_store.update(dict(sorted_ips[:5000]))
-    
+
     current_time = time.time()
-    
+
     # Periodic cleanup to prevent memory leaks
     _cleanup_rate_limit_store()
-    
+
     # Initialize IP entry if not exists
     if client_ip not in rate_limit_store:
         rate_limit_store[client_ip] = []
-    
+
     # Clean old entries for this IP
     cutoff_time = current_time - RATE_LIMIT_WINDOW
     rate_limit_store[client_ip] = [
         req_time for req_time in rate_limit_store[client_ip]
         if req_time >= cutoff_time
     ]
-    
+
     # Check limit
     if len(rate_limit_store[client_ip]) >= RATE_LIMIT_MAX_REQUESTS:
         logger.warning(f"Rate limit exceeded for IP: {client_ip[:8]}...")
         return False
-    
+
     # Add current request
     rate_limit_store[client_ip].append(current_time)
     return True
@@ -370,7 +377,7 @@ def get_client_ip(request: Request) -> str:
         ip_parts = real_ip.strip().split(".")
         if len(ip_parts) == 4 and all(part.isdigit() and 0 <= int(part) <= 255 for part in ip_parts):
             return real_ip.strip()
-    
+
     # X-Forwarded-For can be spoofed, so we take the first (original) IP
     # Only trust if we're behind a known proxy (check via environment)
     forwarded = request.headers.get("X-Forwarded-For")
@@ -380,11 +387,11 @@ def get_client_ip(request: Request) -> str:
         # Basic validation
         if first_ip and not first_ip.startswith("unknown"):
             return first_ip
-    
+
     # Fallback to direct connection IP
     if request.client:
         return request.client.host
-    
+
     return "unknown"
 
 
@@ -395,7 +402,7 @@ def verify_refresh_token(authorization: Optional[str] = Header(None)) -> bool:
     Uses constant-time comparison to prevent timing attacks.
     """
     refresh_token = os.getenv("REFRESH_API_TOKEN")
-    
+
     if not refresh_token:
         # If no token configured, allow in development but warn
         if not IS_PRODUCTION:
@@ -404,17 +411,17 @@ def verify_refresh_token(authorization: Optional[str] = Header(None)) -> bool:
         else:
             logger.error("REFRESH_API_TOKEN not set in production - denying access")
             return False
-    
+
     if not authorization or not authorization.startswith("Bearer "):
         return False
-    
+
     token = authorization.replace("Bearer ", "").strip()
-    
+
     # Use constant-time comparison to prevent timing attacks
     # This ensures the comparison takes the same time regardless of where the mismatch occurs
     if len(token) != len(refresh_token):
         return False
-    
+
     # Use hmac.compare_digest for constant-time comparison
     return hmac.compare_digest(token.encode('utf-8'), refresh_token.encode('utf-8'))
 
@@ -426,7 +433,7 @@ async def startup_event():
     init_db()
     start_scheduler()
     logger.info("Application started successfully")
-    
+
     # Security warnings
     if IS_PRODUCTION:
         if not os.getenv("REFRESH_API_TOKEN"):
@@ -473,25 +480,25 @@ async def get_tracks(
     client_ip = get_client_ip(request)
     if not check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
-    
+
     # Validate platform and format values to prevent injection
     valid_platforms = ["Apple Music", "Amazon Music"]
     valid_formats = ["Dolby Atmos", "360 Reality Audio"]
-    
+
     query = db.query(Track).options(
         joinedload(Track.credits).joinedload(TrackCredit.engineer)
     )
-    
+
     if platform:
         if platform not in valid_platforms:
             raise HTTPException(status_code=400, detail=f"Invalid platform. Must be one of: {', '.join(valid_platforms)}")
         query = query.filter(Track.platform == platform)
-    
+
     if format:
         if format not in valid_formats:
             raise HTTPException(status_code=400, detail=f"Invalid format. Must be one of: {', '.join(valid_formats)}")
         query = query.filter(Track.format == format)
-    
+
     # Order by Atmos release date descending (newest first), fallback to release_date
     # Use nullslast() to put tracks without atmos_release_date at the end
     from sqlalchemy import desc, nullslast
@@ -499,7 +506,7 @@ async def get_tracks(
         nullslast(desc(Track.atmos_release_date)),
         desc(Track.release_date)
     )
-    
+
     tracks = query.offset(offset).limit(limit).all()
     return tracks
 
@@ -524,7 +531,7 @@ async def get_new_tracks(
     client_ip = get_client_ip(request)
     if not check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
-    
+
     try:
         cutoff_date = datetime.now() - timedelta(days=days)
         tracks = db.query(Track).options(
@@ -532,7 +539,7 @@ async def get_new_tracks(
         ).filter(
             Track.release_date >= cutoff_date
         ).order_by(Track.release_date.desc()).all()
-        
+
         return tracks
     except Exception as e:
         logger.error(f"Error fetching new tracks: {e}", exc_info=True)
@@ -562,11 +569,11 @@ async def get_track(
     client_ip = get_client_ip(request)
     if not check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
-    
+
     # Validate track_id is positive
     if track_id <= 0 or track_id > 2147483647:
         raise HTTPException(status_code=400, detail="Track ID must be a positive integer")
-    
+
     try:
         track = db.query(Track).options(
             joinedload(Track.credits).joinedload(TrackCredit.engineer)
@@ -605,7 +612,7 @@ async def refresh_data(
     client_ip = get_client_ip(request)
     if not check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
-    
+
     # Authentication check
     if not verify_refresh_token(authorization):
         raise HTTPException(
@@ -613,7 +620,7 @@ async def refresh_data(
             detail="Unauthorized. Valid Bearer token required.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     try:
         result = await trigger_manual_refresh(db)
         # Log without sensitive information
@@ -839,7 +846,7 @@ async def get_stats(request: Request, db: Session = Depends(get_db)):
     client_ip = get_client_ip(request)
     if not check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
-    
+
     total_tracks = db.query(Track).count()
     dolby_atmos_tracks = db.query(Track).filter(Track.format == "Dolby Atmos").count()
 
@@ -872,19 +879,19 @@ async def rate_track(
     client_ip = get_client_ip(request)
     if not check_rate_limit(client_ip):
          raise HTTPException(status_code=429, detail="Rate limit exceeded.")
-    
+
     # Check if track exists
     track = db.query(Track).filter(Track.id == track_id).first()
     if not track:
         raise HTTPException(status_code=404, detail="Track not found")
-        
+
     # Create simple IP hash with consistent salt from environment
     # This allows detecting duplicate votes from same IP while maintaining privacy
     # WARNING: A secure random salt should be set via RATING_IP_SALT environment variable
     # in production (startup warning will alert if using default)
     salt = os.getenv("RATING_IP_SALT", "default-salt-change-in-production")
     ip_hash = hashlib.sha256(f"{client_ip}{salt}".encode()).hexdigest()
-    
+
     # Save rating
     new_rating = CommunityRating(
         track_id=track_id,
@@ -894,7 +901,7 @@ async def rate_track(
     )
     db.add(new_rating)
     db.commit()
-    
+
     # Calculate new averages
     # (In high scale, do this async/background, but here inline is fine)
     avg_score = db.query(func.avg(CommunityRating.immersiveness_score)).filter(CommunityRating.track_id == track_id).scalar()
@@ -914,7 +921,7 @@ async def rate_track(
         db.query(Track).filter(Track.id == track_id).update(update_data, synchronize_session=False)
 
     db.commit()
-    
+
     return {
         "track_id": track_id,
         "avg_immersiveness": avg_value,
@@ -935,16 +942,16 @@ async def get_engineers(
     # Group by engineer and count track credits
     # This query might need optimization for large datasets
     results = db.query(
-        Engineer, 
+        Engineer,
         func.count(TrackCredit.id).label('count')
     ).join(TrackCredit).group_by(Engineer.id).having(func.count(TrackCredit.id) >= min_mixes).order_by(func.count(TrackCredit.id).desc()).limit(limit).all()
-    
+
     response = []
     for eng, count in results:
         resp = EngineerResponse.model_validate(eng)
         resp.mix_count = count
         response.append(resp)
-        
+
     return response
 
 
@@ -960,9 +967,9 @@ async def get_engineer_details(
     engineer = db.query(Engineer).filter(Engineer.id == engineer_id).first()
     if not engineer:
         raise HTTPException(status_code=404, detail="Engineer not found")
-        
+
     mix_count = db.query(TrackCredit).filter(TrackCredit.engineer_id == engineer_id).count()
-    
+
     resp = EngineerResponse.model_validate(engineer)
     resp.mix_count = mix_count
     return resp

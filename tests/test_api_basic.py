@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 # Set environment variables BEFORE importing app to ensure they are picked up
@@ -6,8 +7,10 @@ os.environ["ENVIRONMENT"] = "testing"
 os.environ["DATABASE_URL"] = "sqlite:///./test_spatial_selecta.db"
 
 from fastapi.testclient import TestClient
-from backend.main import app
+
 from backend.database import Base, engine
+from backend.main import app
+
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_database():

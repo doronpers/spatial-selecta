@@ -1,5 +1,6 @@
-import sqlite3
 import os
+import sqlite3
+
 
 def check_counts():
     db_path = 'spatial_selecta.db'
@@ -10,16 +11,16 @@ def check_counts():
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("SELECT COUNT(*) FROM tracks")
         track_count = cursor.fetchone()[0]
-        
+
         cursor.execute("SELECT COUNT(*) FROM tracks WHERE format = 'Dolby Atmos'")
         atmos_count = cursor.fetchone()[0]
-        
+
         print(f"Total Tracks: {track_count}")
         print(f"Dolby Atmos Tracks: {atmos_count}")
-        
+
         conn.close()
     except Exception as e:
         print(f"Error checking database: {e}")

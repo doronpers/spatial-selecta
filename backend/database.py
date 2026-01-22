@@ -1,11 +1,12 @@
 """
 Database configuration and session management.
 """
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -30,7 +31,6 @@ Base = declarative_base()
 
 def init_db():
     """Initialize database by creating all tables and run migrations."""
-    from backend.models import Track
     Base.metadata.create_all(bind=engine)
     # Run migrations for existing databases
     run_migrations()

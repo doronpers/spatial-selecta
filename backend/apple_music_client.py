@@ -6,11 +6,12 @@ to query whether tracks/albums support Spatial Audio (Dolby Atmos).
 
 Reference: https://developer.apple.com/documentation/applemusicapi
 """
-import os
-import requests
 import logging
-from typing import List, Dict, Optional
+import os
 from datetime import datetime
+from typing import Dict, List, Optional
+
+import requests
 from dotenv import load_dotenv
 
 from backend.utils.apple_music import get_apple_music_token
@@ -24,9 +25,9 @@ class AppleMusicClient:
     """
     Client for interacting with Apple Music API to detect spatial audio content.
     """
-    
+
     BASE_URL = "https://api.music.apple.com/v1"
-    
+
     # VERIFIED Apple Music Spatial Audio Playlists (December 2024)
     # These are real, active playlists curated by Apple
     SPATIAL_AUDIO_PLAYLISTS = [
@@ -70,11 +71,11 @@ class AppleMusicClient:
         "pl.a57f6847cec345fa987e9e8d5ad1a65c",  # Top 25: Hip-Hop
         "pl.b2f7dc59c2ef4bd68c13cefef0eb4db0",  # Top 25: R&B
     ]
-    
+
     def __init__(self):
         """Initialize Apple Music client with API credentials."""
         self.developer_token = os.getenv("APPLE_MUSIC_DEVELOPER_TOKEN")
-        
+
         # Try to generate token if not in environment
         if not self.developer_token:
             try:
@@ -82,17 +83,17 @@ class AppleMusicClient:
                 logger.info("Generated Apple Music Developer Token dynamically")
             except Exception as e:
                 logger.warning(f"Could not generate Apple Music token: {e}")
-        
+
         self.music_user_token = os.getenv("APPLE_MUSIC_USER_TOKEN", "")
-        
+
         if not self.developer_token:
             logger.warning("Apple Music Developer Token not configured. API calls will fail.")
-        
+
         self.headers = {
             "Authorization": f"Bearer {self.developer_token}",
             "Music-User-Token": self.music_user_token
         }
-    
+
     def _make_request(self, endpoint: str, params: Optional[Dict] = None) -> Optional[Dict]:
         """
         Make a request to Apple Music API.
@@ -107,9 +108,9 @@ class AppleMusicClient:
         if not self.developer_token:
             logger.error("Cannot make API request: Developer token not configured")
             return None
-        
+
         url = f"{self.BASE_URL}/{endpoint}"
-        
+
         try:
             response = requests.get(url, headers=self.headers, params=params, timeout=30)
             response.raise_for_status()
@@ -130,8 +131,8 @@ class AppleMusicClient:
             # Catch any other unexpected errors
             logger.error(f"Unexpected error in Apple Music API request: {type(e).__name__} for endpoint: {endpoint}")
             return None
-    
-    def get_catalog_tracks(self, storefront: str = "us", ids: List[str] = None, 
+
+    def get_catalog_tracks(self, storefront: str = "us", ids: List[str] = None,
                           include_audio_variants: bool = True) -> Optional[List[Dict]]:
         """
         Get catalog tracks with audio variants information.
@@ -146,23 +147,23 @@ class AppleMusicClient:
         """
         if not ids:
             return []
-        
+
         endpoint = f"catalog/{storefront}/songs"
         params = {
             "ids": ",".join(ids)
         }
-        
+
         if include_audio_variants:
             params["extend"] = "audioVariants"
-        
+
         response = self._make_request(endpoint, params)
-        
+
         if response and "data" in response:
             return response["data"]
-        
+
         return []
-    
-    def get_playlist_tracks(self, playlist_id: str, storefront: str = "us", 
+
+    def get_playlist_tracks(self, playlist_id: str, storefront: str = "us",
                            limit: int = 100, offset: int = 0) -> Optional[List[Dict]]:
         """
         Get tracks from a specific playlist with pagination support.
@@ -183,19 +184,19 @@ class AppleMusicClient:
             "limit[tracks]": min(limit, 100),
             "offset[tracks]": offset
         }
-        
+
         response = self._make_request(endpoint, params)
-        
+
         if response and "data" in response:
             data = response["data"][0]
             if "relationships" in data and "tracks" in data["relationships"]:
                 tracks = data["relationships"]["tracks"]["data"]
-                
+
                 # Check for pagination - get next page if available
                 # Logic fix: Only recurse if we haven't reached the requested limit
                 next_url = data["relationships"]["tracks"].get("next")
                 remaining_limit = limit - len(tracks)
-                
+
                 if next_url and remaining_limit > 0:
                     # Recursively get more tracks
                     more_tracks = self.get_playlist_tracks(
@@ -203,11 +204,11 @@ class AppleMusicClient:
                     )
                     if more_tracks:
                         tracks.extend(more_tracks)
-                
+
                 return tracks
-        
+
         return []
-    
+
     def check_spatial_audio_support(self, track_data: Dict) -> Dict:
         """
         Check if a track supports spatial audio from its API data.
@@ -223,17 +224,17 @@ class AppleMusicClient:
             "has_dolby_atmos": False,
             "audio_variants": []
         }
-        
+
         if "attributes" not in track_data:
             return result
-        
+
         attributes = track_data["attributes"]
-        
+
         # Check audioVariants field (most reliable method)
         if "audioVariants" in attributes:
             audio_variants = attributes["audioVariants"]
             result["audio_variants"] = audio_variants
-            
+
             # Check for Dolby Atmos in variants (handle both list and dict formats)
             if isinstance(audio_variants, list):
                 for variant in audio_variants:
@@ -249,7 +250,7 @@ class AppleMusicClient:
                         result["has_dolby_atmos"] = True
                         result["has_spatial_audio"] = True
                         break
-        
+
         # Fallback: Check audioTraits (older method)
         if not result["has_spatial_audio"] and "audioTraits" in attributes:
             audio_traits = attributes["audioTraits"]
@@ -264,12 +265,12 @@ class AppleMusicClient:
                 if "spatial" in audio_traits.lower() or "atmos" in audio_traits.lower():
                     result["has_spatial_audio"] = True
                     result["has_dolby_atmos"] = True
-        
+
         return result
-    
+
     TARGET_STOREFRONTS = ['us', 'gb', 'jp', 'de']
 
-    def discover_spatial_audio_tracks(self, storefront: str = "us", 
+    def discover_spatial_audio_tracks(self, storefront: str = "us",
                                       max_playlists: int = None) -> List[Dict]:
         """
         Discover new spatial audio tracks by monitoring curated playlists.
@@ -283,24 +284,24 @@ class AppleMusicClient:
         """
         discovered_tracks = []
         seen_ids = set()
-        
+
         playlists_to_scan = self.SPATIAL_AUDIO_PLAYLISTS
         if max_playlists:
             playlists_to_scan = playlists_to_scan[:max_playlists]
-        
+
         logger.info(f"Discovering spatial audio tracks from {len(playlists_to_scan)} playlists")
-        
+
         # Collection of track IDs to check for regional availability
         discovered_ids = []
-        
+
         for playlist_id in playlists_to_scan:
             try:
                 tracks = self.get_playlist_tracks(playlist_id, storefront)
-                
+
                 if not tracks:
                     logger.warning(f"No tracks found in playlist {playlist_id}")
                     continue
-                
+
                 playlist_added = 0
                 for track in tracks:
                     # Skip duplicates
@@ -308,31 +309,31 @@ class AppleMusicClient:
                     if track_id in seen_ids:
                         continue
                     seen_ids.add(track_id)
-                    
+
                     spatial_info = self.check_spatial_audio_support(track)
-                    
+
                     if spatial_info["has_spatial_audio"]:
                         track_info = self._extract_track_info(track, spatial_info)
                         discovered_tracks.append(track_info)
                         discovered_ids.append(track_id)
                         playlist_added += 1
-                
+
                 logger.info(f"Playlist {playlist_id}: {len(tracks)} tracks, {playlist_added} new spatial audio")
-                
+
             except Exception as e:
                 logger.error(f"Error processing playlist {playlist_id}: {e}")
-        
+
         # Perform multi-region check
         if discovered_ids:
             logger.info(f"Checking regional availability for {len(discovered_ids)} tracks...")
             regional_availability = self.check_region_availability(discovered_ids)
-            
+
             # Merge regional info back into discovered tracks
             for track in discovered_tracks:
                 track_id = track.get("apple_music_id")
                 if track_id in regional_availability:
                     track["region_availability"] = regional_availability[track_id]
-        
+
         logger.info(f"Discovered {len(discovered_tracks)} unique spatial audio tracks total")
         return discovered_tracks
 
@@ -347,25 +348,25 @@ class AppleMusicClient:
             Dictionary mapping track_id to list of region availability dicts
         """
         availability_map = {tid: [] for tid in track_ids}
-        
+
         # Chunk IDs to avoid URL length limits (max ~20-50 IDs per call is safe)
         chunk_size = 30
         chunks = [track_ids[i:i + chunk_size] for i in range(0, len(track_ids), chunk_size)]
-        
+
         for storefront in self.TARGET_STOREFRONTS:
             for chunk in chunks:
                 try:
                     # Fetch tracks for this storefront
                     tracks = self.get_catalog_tracks(storefront, ids=chunk)
-                    
+
                     # Create a set of found IDs for this storefront
                     found_tracks = {t.get("id"): t for t in tracks}
-                    
+
                     # Update availability map
                     for track_id in chunk:
                         is_available = track_id in found_tracks
                         format_info = "Stereo"
-                        
+
                         if is_available:
                             track_data = found_tracks[track_id]
                             spatial_info = self.check_spatial_audio_support(track_data)
@@ -373,18 +374,18 @@ class AppleMusicClient:
                                 format_info = "Dolby Atmos"
                             elif spatial_info["has_spatial_audio"]:
                                 format_info = "Spatial Audio"
-                                
+
                         availability_map[track_id].append({
                             "storefront": storefront,
                             "is_available": is_available,
                             "format": format_info
                         })
-                        
+
                 except Exception as e:
                     logger.error(f"Error checking availability for {storefront}: {e}")
-                    
+
         return availability_map
-    
+
     def _extract_track_info(self, track_data: Dict, spatial_info: Dict) -> Dict:
         """
         Extract relevant track information for storage.
@@ -397,7 +398,7 @@ class AppleMusicClient:
             Formatted track information
         """
         attributes = track_data.get("attributes", {})
-        
+
         # Get album artwork URL for potential future use
         artwork = attributes.get("artwork", {})
         artwork_url = None
@@ -405,20 +406,20 @@ class AppleMusicClient:
             url_template = artwork.get("url", "")
             if url_template:
                 artwork_url = url_template.replace("{w}", "300").replace("{h}", "300")
-        
+
         # Get the music URL from the API (this is the direct Apple Music link)
         music_link = attributes.get("url")
-        
+
         # Parse release dates
         release_date = self._parse_release_date(attributes.get("releaseDate"))
-        
+
         # For atmos_release_date, use the release date if the track has Atmos
         # NOTE: This assumes tracks are released with Atmos from day one.
         # For catalog releases where Atmos was added later, this will be inaccurate.
         # Future enhancement: Track when Atmos was specifically added vs original release.
         # For now, manual correction in data.json is recommended for older catalog releases.
         atmos_release_date = release_date if spatial_info["has_dolby_atmos"] else None
-        
+
         return {
             "apple_music_id": track_data.get("id"),
             "title": attributes.get("name", "Unknown"),
@@ -441,7 +442,7 @@ class AppleMusicClient:
                 "disc_number": attributes.get("discNumber"),
             }
         }
-    
+
     def _parse_release_date(self, date_string: Optional[str]) -> datetime:
         """
         Parse release date string to datetime.
@@ -454,7 +455,7 @@ class AppleMusicClient:
         """
         if not date_string:
             return datetime.now()
-        
+
         try:
             # Handle YYYY-MM-DD format
             if len(date_string) == 10:
@@ -463,7 +464,7 @@ class AppleMusicClient:
             return datetime.fromisoformat(date_string.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             return datetime.now()
-    
+
     def _get_album_art_emoji(self, genres: List[str]) -> str:
         """
         Get an emoji representation for album art based on genre.
@@ -500,7 +501,7 @@ class AppleMusicClient:
             "J-Pop": "🌸",
             "Ambient": "🌌",
         }
-        
+
         for genre in genres:
             # Check exact match first
             if genre in genre_emojis:
@@ -509,9 +510,9 @@ class AppleMusicClient:
             for key, emoji in genre_emojis.items():
                 if key.lower() in genre.lower():
                     return emoji
-        
+
         return "🎵"  # Default emoji
-    
+
     def discover_from_new_music_playlists(self, storefront: str = "us") -> List[Dict]:
         """
         Discover spatial audio tracks from new music and trending playlists.
@@ -582,7 +583,7 @@ class AppleMusicClient:
             "extend": "audioVariants"
         }
 
-        logger.info(f"Discovering new album releases with Atmos support...")
+        logger.info("Discovering new album releases with Atmos support...")
 
         try:
             response = self._make_request(endpoint, params)

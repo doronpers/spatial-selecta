@@ -2,6 +2,8 @@
 
 This document is the **Single Source of Truth** for all AI agents (Claude, Cursor, Gemini, etc.) working on Sonotheia and related repositories. You MUST refer to this before and during your tasks.
 
+> **License**: This document and the associated codebase are licensed under the [MIT License](LICENSE). When using or adapting code from this repository, include the original copyright notice. Third-party dependencies retain their original licenses.
+
 ---
 
 ## 0. Prime Directives (NON-NEGOTIABLE)

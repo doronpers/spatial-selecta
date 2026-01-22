@@ -4,6 +4,9 @@ This document is the **Single Source of Truth** for all AI agents (Claude, Curso
 
 > **License**: This document and the associated codebase are licensed under the [MIT License](LICENSE). When using or adapting code from this repository, include the original copyright notice. Third-party dependencies retain their original licenses.
 
+> **NOTE**: This file is auto-generated from modular rules in `shared-ai-utils`. 
+> DO NOT EDIT DIRECTLY. Update the source files in `shared-ai-utils/src/shared_ai_utils/rules/`.
+
 ---
 
 ## 0. Prime Directives (NON-NEGOTIABLE)
@@ -30,6 +33,7 @@ This document is the **Single Source of Truth** for all AI agents (Claude, Curso
         * **Fail Fast**: Validate inputs at the boundary (API/CLI), not deep in the stack.
         * **Atomic Operations**: Side effects (DB writes, File IO) should be isolated.
 
+
 ---
 
 ## 1. Operational Guardrails
@@ -37,6 +41,18 @@ This document is the **Single Source of Truth** for all AI agents (Claude, Curso
 * **Config**: `pyproject.toml` is the source of truth for tooling. `settings.yaml` (or equivalent) for app config.
 * **Audio**: Float32 mono 16kHz numpy arrays only.
 * **Dependencies**: Lock versions. Do not upgrade without explicit instruction. Use pragmatic dependency management - avoid unnecessary dependencies, but framework dependencies (e.g., FastAPI for API modules) are acceptable when appropriate.
+
+### Dependency Tiers
+
+Minimize dependencies while allowing appropriate framework usage:
+
+* **Core Modules** (sensors, VAD, JSON utils): `numpy` + `pydantic` only
+* **CLI Modules**: Core + `Rich`, `Click` (interactive formatting)
+* **API/Assessment Modules**: Core + `FastAPI`, `textstat`, lightweight analysis libraries
+* **Avoid**: Vendor-specific SDKs, heavy ML frameworks (TensorFlow/PyTorch), libraries with C extensions (unless critical)
+
+**Guideline**: Core contracts remain dependency-free. API-specific modules may include framework dependencies when they provide clear net gain over manual implementation.
+
 
 ---
 
@@ -54,6 +70,7 @@ This document is the **Single Source of Truth** for all AI agents (Claude, Curso
   * **src-layout**: All code lives in `src/<package_name>/`.
   * **No Root Scripts**: Scripts belong in `scripts/` or `bin/`.
 * **Configuration**: `backend/config/settings.yaml` is the SINGLE source of truth for application configuration.
+
 
 ---
 
@@ -88,6 +105,7 @@ This document is the **Single Source of Truth** for all AI agents (Claude, Curso
 * **Circular Imports**: Use Protocol pattern (typing.Protocol) for dependency-free interfaces.
 * **Import Order**: Run `ruff check --fix` or `isort` to auto-fix import sorting issues.
 
+
 ---
 
 ## 4. Key Commands
@@ -106,6 +124,7 @@ pytest               # Test backend
 npm test             # Test frontend
 ```
 
+
 ---
 
 ## 5. Key Paths
@@ -115,6 +134,7 @@ npm test             # Test frontend
 * `backend/sensors/` - Sensor implementations
 * `frontend/src/App.js` - Frontend entry
 
+
 ---
 
 ## 6. AI-Assisted Development
@@ -122,12 +142,42 @@ npm test             # Test frontend
 * **Feedback Loop**: When generating code, checking for errors, or reviewing PRs, ALWAYS consider patterns from the **Feedback Loop** library if available (run `feedback-loop memory query` or check `.feedback_loop/patterns.json`).
 * **Learn from Failures**: If a test fails, run `feedback-loop analyze` to update the pattern library before attempting a fix.
 
+
 ---
 
 ## 7. Documentation
 
-* Update `README.md` if installation steps change.
-* Update `AGENT_KNOWLEDGE_BASE.md` if you discover a new recurrent issue.
+### Documentation Maintenance (REQUIRED)
+
+**CRITICAL**: Documentation maintenance is a mandatory part of every task completion. This is not optional.
+
+* **Always Update Documentation**: As part of completing any task, you MUST update relevant documentation to reflect changes, additions, or improvements.
+
+* **Prefer Existing Documentation**: Add new documents ONLY when absolutely necessary for clarity and understandability. When possible, add information to existing documentation files to maintain organization and reduce fragmentation.
+
+* **Maintain Organization**: Keep documentation organized by:
+  * Adding to existing relevant sections rather than creating new files
+  * Following established documentation structure and patterns
+  * Grouping related information together
+
+* **Revise Outdated Content**: When you encounter outdated, irrelevant, or redundant information in documentation during your work, you MUST:
+  * Update outdated information to reflect current state
+  * Remove or consolidate redundant content
+  * Mark or remove irrelevant sections
+  * Do not leave documentation in a worse state than you found it
+
+* **Update These Files When Relevant**:
+  * `README.md` - If installation steps, setup, or project overview changes
+  * `AGENT_KNOWLEDGE_BASE.md` - If you discover new recurrent issues, patterns, or guidelines
+  * `ROADMAP.md` - If completing TODOs or adding new tasks
+  * API documentation - If endpoints, parameters, or responses change
+  * Code comments and docstrings - If function behavior or interfaces change
+
+* **Documentation as Part of Definition of Done**: A task is not complete until:
+  1. Code changes are implemented and tested
+  2. All relevant documentation is updated
+  3. Outdated information encountered during the task is revised
+  4. Documentation passes linting checks (markdownlint)
 
 ### Documentation Standards
 
@@ -151,8 +201,13 @@ npm test             # Test frontend
 
 * **Markdown Tables**: When creating markdown tables, use the "compact" style format required by markdownlint MD060. This means separator rows must have spaces around pipes: `| ------ | ------ |` instead of `|------|------|`. The header row and separator row must have consistent spacing. Always verify table formatting with markdownlint before committing.
 
+
 ---
 
 ## 8. Reasoning Logs
 
 After significant tasks (complex, architectural, refactoring, non-obvious bug fixes), create a reasoning log entry at `feedback-loop/agent_reasoning_logs/logs/YYYY-MM-DD_sono-platform_task.md` (see template: `feedback-loop/agent_reasoning_logs/templates/reasoning_entry.md`).
+
+
+---
+

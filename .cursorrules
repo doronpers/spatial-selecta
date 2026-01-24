@@ -30,6 +30,32 @@ flake8 .             # Lint
 pytest               # Test
 ```
 
+## Pre-Commit Hook Requirements (MANDATORY)
+
+**CRITICAL**: Before creating new code, ensure you:
+
+1. **Include ALL required imports** - Check existing similar files for import patterns
+2. **Add type hints** - All new functions need type annotations
+3. **Format docstrings correctly** - One-line: `"""Description."""` (no blank line)
+4. **Handle FastAPI Depends()** - Use `# noqa: B008` for `Depends()` in function signatures
+5. **Check YAML indentation** - Use 2 spaces consistently
+6. **Remove unused imports** - Especially in test files
+7. **Run pre-commit hooks** - Execute `pre-commit run --all-files` before committing
+
+**Common failures to avoid:**
+- Missing imports (NameError or mypy: "Name X is not defined")
+- Unused imports (flake8: F401)
+- Wrong YAML indentation (yamllint: indentation errors)
+- Missing docstrings (flake8: D104, D200)
+- Long lines (flake8: E501)
+
+**Always run the pre-commit checklist before finishing:**
+```bash
+black . && flake8 . && yamllint . && pre-commit run --all-files
+```
+
+**See `.agent/workflows/pre-commit-checklist.md` for detailed checklist and common fixes.**
+
 ## Audio Format
 
 All audio must be **float32 mono numpy arrays at 16kHz**

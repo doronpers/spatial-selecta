@@ -100,10 +100,43 @@ Minimize dependencies while allowing appropriate framework usage:
 * **IDE Setup**: Enable "Format on Save" and configure linter to use `.pre-commit-config.yaml` (see AGENT_KNOWLEDGE_BASE.md).
 * **Bulk Operations**: Use `git diff --stat` to audit changes, then run `python3 -m compileall .` before committing (see AGENT_KNOWLEDGE_BASE.md).
 
+### Pre-Commit Hook Compliance (MANDATORY)
+
+**Before creating any new code, you MUST ensure compliance with pre-commit hooks:**
+
+1. **Import Completeness**: Include ALL required imports. Check similar existing files for patterns:
+   - FastAPI: `APIRouter`, `Depends`, `HTTPException`, `status`
+   - Pydantic: `BaseModel`, `Field`
+   - Typing: `Any`, `Dict`, `List`, `Optional`
+   - Standard library: `datetime`, `BytesIO`, etc.
+
+2. **Type Annotations**: All new functions must have complete type hints. Run type checking before committing if mypy is enabled.
+
+3. **Docstring Format**:
+   - One-line: `"""Description."""` (no blank line, period at end)
+   - All public modules need docstrings (even empty `__init__.py`)
+
+4. **FastAPI Patterns**: Use `# noqa: B008` for `Depends()` in function signatures (this is acceptable FastAPI pattern).
+
+5. **YAML Formatting**: Use 2-space indentation consistently. Run `yamllint .` before committing.
+
+6. **Unused Imports**: Remove all unused imports, especially in test files.
+
+7. **Pre-Commit Verification**: Always run `pre-commit run --all-files` before committing. Fix any failures.
+
+**Common Pre-Commit Failures to Avoid:**
+- Missing imports → NameError or mypy: "Name X is not defined"
+- Unused imports → flake8: F401
+- Wrong YAML indentation → yamllint: indentation errors
+- Missing docstrings → flake8: D104, D200
+- Long lines → flake8: E501
+- Missing type hints → mypy: function has no return type annotation
+
 ### Import Management
 
 * **Circular Imports**: Use Protocol pattern (typing.Protocol) for dependency-free interfaces.
 * **Import Order**: Run `ruff check --fix` or `isort` to auto-fix import sorting issues.
+* **Import Completeness**: When creating new files, check existing similar files for required imports to avoid failures.
 
 
 ---

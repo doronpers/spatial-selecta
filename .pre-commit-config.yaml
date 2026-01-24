@@ -1,3 +1,19 @@
+# Pre-commit hooks configuration
+#
+# IMPORTANT FOR AGENTS: Before creating new code, read:
+# - AGENT_KNOWLEDGE_BASE.md (section "Pre-Commit Hook Compliance")
+# - .agent/workflows/pre-commit-checklist.md
+# - .cursorrules (section "Pre-Commit Hook Requirements")
+#
+# Common failures to avoid:
+# - Missing imports → Add all required imports (check similar existing files)
+# - Unused imports → Remove unused imports (especially in test files)
+# - YAML indentation → Use 2 spaces consistently
+# - Missing docstrings → Add docstrings to all modules and public functions
+# - Type hints → Add type annotations to all new functions
+# - FastAPI Depends() → Use # noqa: B008 for Depends() in function signatures
+#
+# Always run: pre-commit run --all-files before committing
 repos:
   - repo: https://github.com/psf/black
     rev: 25.1.0
